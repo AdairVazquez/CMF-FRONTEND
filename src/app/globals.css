@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   --color-background:   #0A0D12;
   --color-foreground:   #F4F6F8;
@@ -14,6 +16,13 @@
   --color-muted:        #6B7280;
   --font-sans:          var(--font-geist-sans);
   --font-mono:          var(--font-geist-mono);
+  --color-sidebar-ring:   var(--sidebar-ring);
+  --color-sidebar-border:   var(--sidebar-border);
+  --color-sidebar-accent-foreground:   var(--sidebar-accent-foreground);
+  --color-sidebar-accent:   var(--sidebar-accent);
+  --color-sidebar-primary-foreground:   var(--sidebar-primary-foreground);
+  --color-sidebar-primary:   var(--sidebar-primary);
+  --color-sidebar-foreground:   var(--sidebar-foreground);
 }
 
 :root {
@@ -47,6 +56,14 @@
   --gradient-trust-hover:  linear-gradient(135deg, #2F80ED 0%, #0E2F4F 100%);
   --gradient-accent:       linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%);
   --gradient-silver-text:  linear-gradient(135deg, #B9C0C8 0%, #F4F6F8 40%, #B9C0C8 100%);
+  --sidebar:   hsl(0 0% 98%);
+  --sidebar-foreground:   hsl(240 5.3% 26.1%);
+  --sidebar-primary:   hsl(240 5.9% 10%);
+  --sidebar-primary-foreground:   hsl(0 0% 98%);
+  --sidebar-accent:   hsl(240 4.8% 95.9%);
+  --sidebar-accent-foreground:   hsl(240 5.9% 10%);
+  --sidebar-border:   hsl(220 13% 91%);
+  --sidebar-ring:   hsl(217.2 91.2% 59.8%);
 }
 
 body {
@@ -78,4 +95,15 @@ body {
   outline: none;
   box-shadow: 0 0 0 2px rgba(47, 128, 237, 0.25);
   border-color: #2F80ED;
+}
+
+.dark {
+  --sidebar:   hsl(240 5.9% 10%);
+  --sidebar-foreground:   hsl(240 4.8% 95.9%);
+  --sidebar-primary:   hsl(224.3 76.3% 48%);
+  --sidebar-primary-foreground:   hsl(0 0% 100%);
+  --sidebar-accent:   hsl(240 3.7% 15.9%);
+  --sidebar-accent-foreground:   hsl(240 4.8% 95.9%);
+  --sidebar-border:   hsl(240 3.7% 15.9%);
+  --sidebar-ring:   hsl(217.2 91.2% 59.8%);
 }
