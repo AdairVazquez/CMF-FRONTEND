@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-base: #0A0D12;
+  --color-silver: #B9C0C8;
+  --color-trust: #0E2F4F;
+  --color-innovation: #2F80ED;
+  --color-fog: #F4F6F8;
+  --color-background: #0A0D12;
+  --color-foreground: #F4F6F8;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: 222 47% 6%;
+  --foreground: 213 14% 93%;
+  --card: 222 47% 8%;
+  --card-foreground: 213 14% 93%;
+  --popover: 222 47% 8%;
+  --popover-foreground: 213 14% 93%;
+  --primary: 211 67% 19%;
+  --primary-foreground: 213 14% 93%;
+  --secondary: 222 47% 10%;
+  --secondary-foreground: 213 14% 93%;
+  --muted: 222 47% 12%;
+  --muted-foreground: 220 9% 46%;
+  --accent: 213 83% 56%;
+  --accent-foreground: 213 14% 93%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 213 14% 93%;
+  --border: 222 32% 16%;
+  --input: 222 32% 16%;
+  --ring: 213 83% 56%;
+  --radius: 0.5rem;
+}
+
+body {
+  background: #0A0D12;
+  color: #F4F6F8;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  border-color: #1C2333;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0A0D12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1C2333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2F80ED;
+}

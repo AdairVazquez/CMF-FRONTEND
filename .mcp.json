@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "command": "cmd",
+      "args": ["/c", "npx", "shadcn@latest", "mcp"]
+    },
+    "context7": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp"]
+    },
+    "filesystem": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "github": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-github"]
+    },
+    "gsap-master": {
+      "command": "cmd",
+      "args": ["/c", "npx", "bruzethegreat-gsap-master-mcp-server@latest"]
+    }
+  }
+}
