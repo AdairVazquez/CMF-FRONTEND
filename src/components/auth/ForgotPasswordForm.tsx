@@ -1,24 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type KeyboardEvent, type ClipboardEvent } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { motion, AnimatePresence } from "framer-motion";
-import { Mail, Key, Lock, Eye, EyeOff, Loader2, ArrowLeft, Check } from "lucide-react";
+import { gsap } from "gsap";
+import { useGSAP } from "@gsap/react";
+import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Check } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import apiClient from "@/lib/axios";
-import { Logo } from "@/components/shared/Logo";
 import type { ApiResponse } from "@/types/api";
+import type { VerifyResetCodeResponse } from "@/types/auth";
 
+gsap.registerPlugin(useGSAP);
+
+/* ─── Schemas ─── */
 const step1Schema = z.object({
   email: z.string().email("Correo electrónico inválido"),
 });
 
-const step2Schema = z
+const step3Schema = z
   .object({
-    code: z.string().length(6, "El código debe tener 6 dígitos"),
     password: z
       .string()
       .min(8, "Mínimo 8 caracteres")
@@ -33,42 +38,40 @@ const step2Schema = z
   });
 
 type Step1Data = z.infer<typeof step1Schema>;
-type Step2Data = z.infer<typeof step2Schema>;
+type Step3Data = z.infer<typeof step3Schema>;
 
+/* ─── PasswordStrength ─── */
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
-    { label: "8+ caracteres", ok: password.length >= 8 },
-    { label: "Mayúscula", ok: /[A-Z]/.test(password) },
-    { label: "Número", ok: /[0-9]/.test(password) },
-    { label: "Carácter especial", ok: /[^A-Za-z0-9]/.test(password) },
+    { label: "Mínimo 8 caracteres",  ok: password.length >= 8 },
+    { label: "Una letra mayúscula",  ok: /[A-Z]/.test(password) },
+    { label: "Un número",            ok: /[0-9]/.test(password) },
+    { label: "Un carácter especial", ok: /[^A-Za-z0-9]/.test(password) },
   ];
   const strength = checks.filter((c) => c.ok).length;
-  const colors = ["", "#ef4444", "#f97316", "#eab308", "#22c55e"];
-  const labels = ["", "Muy débil", "Débil", "Regular", "Fuerte"];
-
+  const colors   = ["", "#ef4444", "#f97316", "#eab308", "#22c55e"];
+  const labels   = ["", "Débil", "Regular", "Buena", "Fuerte"];
   if (!password) return null;
 
   return (
-    <div className="mt-2">
+    <div className="mt-3">
       <div className="flex gap-1 mb-2">
         {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-1 flex-1 rounded-full transition-all"
-            style={{ background: i <= strength ? colors[strength] : "#1C2333" }}
-          />
+          <div key={i} className="h-1 flex-1 rounded-full transition-all"
+            style={{ background: i <= strength ? colors[strength] : "#1C2333" }} />
         ))}
       </div>
-      <p className="text-xs mb-2" style={{ color: colors[strength] }}>
-        {labels[strength]}
-      </p>
+      <p className="text-xs mb-2" style={{ color: colors[strength] }}>{labels[strength]}</p>
       <div className="grid grid-cols-2 gap-1">
         {checks.map((c) => (
-          <div key={c.label} className="flex items-center gap-1">
-            <Check className="w-3 h-3" style={{ color: c.ok ? "#22c55e" : "#1C2333" }} />
-            <span className="text-xs" style={{ color: c.ok ? "#F4F6F8" : "#6B7280" }}>
-              {c.label}
-            </span>
+          <div key={c.label} className="flex items-center gap-1.5">
+            <div
+              className="w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0"
+              style={{ background: c.ok ? "rgba(34,197,94,0.2)" : "transparent", border: `1px solid ${c.ok ? "#22c55e" : "#1C2333"}` }}
+            >
+              {c.ok && <Check className="w-2 h-2" style={{ color: "#22c55e" }} />}
+            </div>
+            <span className="text-xs" style={{ color: c.ok ? "#F4F6F8" : "#6B7280" }}>{c.label}</span>
           </div>
         ))}
       </div>
@@ -76,104 +79,221 @@ function PasswordStrength({ password }: { password: string }) {
   );
 }
 
+/* ─── OTP Inputs ─── */
+function OtpInputs({ onComplete, disabled }: { onComplete: (code: string) => void; disabled?: boolean }) {
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
+  const refs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleChange = (i: number, v: string) => {
+    if (!/^\d*$/.test(v)) return;
+    const next = [...digits];
+    next[i] = v.slice(-1);
+    setDigits(next);
+    if (v && i < 5) refs.current[i + 1]?.focus();
+    if (next.every((d) => d !== "")) onComplete(next.join(""));
+  };
+  const handleKeyDown = (i: number, e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !digits[i] && i > 0) refs.current[i - 1]?.focus();
+  };
+  const handlePaste = (e: ClipboardEvent) => {
+    e.preventDefault();
+    const p = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (p.length === 6) { setDigits(p.split("")); onComplete(p); }
+  };
+
+  return (
+    <div className="flex gap-2 justify-center">
+      {digits.map((d, i) => (
+        <input
+          key={i}
+          ref={(el) => { refs.current[i] = el; }}
+          type="text" inputMode="numeric" maxLength={1} value={d}
+          onChange={(e) => handleChange(i, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={handlePaste}
+          disabled={disabled}
+          aria-label={`Dígito ${i + 1}`}
+          className="w-11 h-13 text-center text-lg font-bold font-mono rounded-lg border outline-none transition-all disabled:opacity-50"
+          style={{
+            background: "#080B0F",
+            borderColor: d ? "#2F80ED" : "#1C2333",
+            color: "#F4F6F8",
+            boxShadow: d ? "0 0 0 1px rgba(47,128,237,0.3)" : "none",
+            height: "52px",
+          }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = "#2F80ED"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(47,128,237,0.2)"; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = d ? "#2F80ED" : "#1C2333"; e.currentTarget.style.boxShadow = d ? "0 0 0 1px rgba(47,128,237,0.3)" : "none"; }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ─── Main Component ─── */
 export function ForgotPasswordForm() {
-  const [step, setStep] = useState<1 | 2>(1);
+  const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const stepRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [email, setEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const step1Form = useForm<Step1Data>({ resolver: zodResolver(step1Schema) });
-  const step2Form = useForm<Step2Data>({ resolver: zodResolver(step2Schema) });
+  const step3Form = useForm<Step3Data>({ resolver: zodResolver(step3Schema) });
 
+  /* ── GSAP entrada ── */
+  useGSAP(() => {
+    gsap.fromTo(stepRef.current,
+      { opacity: 0, y: 20 },
+      { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }
+    );
+  }, { scope: containerRef, dependencies: [step] });
+
+  const slideToStep = (next: 1 | 2 | 3) => {
+    gsap.to(stepRef.current, {
+      opacity: 0, x: -30, duration: 0.2, ease: "power2.in",
+      onComplete: () => {
+        setStep(next);
+        gsap.fromTo(stepRef.current,
+          { opacity: 0, x: 30 },
+          { opacity: 1, x: 0, duration: 0.3, ease: "power3.out" }
+        );
+      },
+    });
+  };
+
+  /* ── Mutations ── */
   const sendCode = useMutation({
-    mutationFn: (data: Step1Data) =>
-      apiClient.post<never, ApiResponse<unknown>>("/auth/forgot-password", data),
-    onSuccess: (_res, variables) => {
-      setEmail(variables.email);
-      setStep(2);
+    mutationFn: (d: Step1Data) =>
+      apiClient.post<never, ApiResponse<unknown>>("/auth/forgot-password", d),
+    onSuccess: (_r, vars) => { setEmail(vars.email); slideToStep(2); },
+  });
+
+  const verifyCode = useMutation({
+    mutationFn: (code: string) =>
+      apiClient.post<never, ApiResponse<VerifyResetCodeResponse>>(
+        "/auth/verify-reset-code",
+        { email, code }
+      ),
+    onSuccess: (res) => {
+      setResetToken(res.data.reset_token);
+      slideToStep(3);
     },
   });
 
   const resetPassword = useMutation({
-    mutationFn: (data: Step2Data) =>
+    mutationFn: (d: Step3Data) =>
       apiClient.post<never, ApiResponse<unknown>>("/auth/reset-password", {
-        ...data,
-        email,
+        reset_token: resetToken,
+        password: d.password,
+        password_confirmation: d.password_confirmation,
       }),
-    onSuccess: () => setSuccess(true),
+    onSuccess: () => {
+      toast.success("Contraseña actualizada correctamente");
+      router.push("/login");
+    },
   });
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#0A0D12" }}>
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-          className="w-full max-w-md p-8 rounded-2xl border text-center"
-          style={{ background: "#0D1117", borderColor: "#1C2333" }}>
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ background: "rgba(34, 197, 94, 0.1)", border: "1px solid rgba(34, 197, 94, 0.3)" }}>
-            <Check className="w-8 h-8 text-green-400" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2" style={{ color: "#B9C0C8" }}>¡Contraseña restablecida!</h2>
-          <p className="text-sm mb-6" style={{ color: "#6B7280" }}>Tu contraseña ha sido actualizada correctamente.</p>
-          <Link href="/login"
-            className="block w-full py-3 px-4 rounded-lg font-medium text-sm text-center transition-all"
-            style={{ background: "#0E2F4F", color: "#F4F6F8" }}>
-            Ir al inicio de sesión
-          </Link>
-        </motion.div>
-      </div>
-    );
-  }
+  const maskEmail = (e: string) => {
+    const [local, domain] = e.split("@");
+    if (!local || !domain) return e;
+    return `${local.slice(0, 2)}${"*".repeat(Math.max(local.length - 2, 3))}@${domain}`;
+  };
+
+  /* ── Step indicator ── */
+  const steps = [
+    { n: 1, label: "Correo" },
+    { n: 2, label: "Código" },
+    { n: 3, label: "Contraseña" },
+  ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "#0A0D12" }}>
+    <div
+      ref={containerRef}
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{ background: "#0A0D12" }}
+    >
       <div className="w-full max-w-md">
+        {/* Logo */}
         <div className="flex justify-center mb-8">
-          <Logo size="md" />
+          <div
+            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
+            style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)", color: "#F4F6F8" }}
+          >
+            CMF
+          </div>
         </div>
 
-        <div className="p-8 rounded-2xl border" style={{ background: "#0D1117", borderColor: "#1C2333" }}>
-          <AnimatePresence mode="wait">
-            {step === 1 ? (
-              <motion.div key="step1"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}>
+        {/* Step indicator */}
+        <div className="flex items-center justify-center gap-3 mb-8">
+          {steps.map((s, i) => (
+            <div key={s.n} className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all"
+                  style={{
+                    background: step > s.n ? "#22c55e" : step === s.n ? "#2F80ED" : "#1C2333",
+                    color: step >= s.n ? "#fff" : "#6B7280",
+                  }}
+                >
+                  {step > s.n ? <Check className="w-3.5 h-3.5" /> : s.n}
+                </div>
+                <span className="text-xs hidden sm:block" style={{ color: step === s.n ? "#B9C0C8" : "#6B7280" }}>
+                  {s.label}
+                </span>
+              </div>
+              {i < steps.length - 1 && (
+                <div className="w-8 h-px" style={{ background: step > s.n ? "#22c55e" : "#1C2333" }} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="p-8 rounded-2xl border"
+          style={{ background: "#0D1117", borderColor: "#1C2333" }}
+        >
+          <div ref={stepRef}>
+            {/* ── STEP 1: Email ── */}
+            {step === 1 && (
+              <div>
                 <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(47, 128, 237, 0.1)", border: "1px solid rgba(47, 128, 237, 0.3)" }}>
-                    <Mail className="w-8 h-8" style={{ color: "#2F80ED" }} />
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(47,128,237,0.1)", border: "1px solid rgba(47,128,237,0.3)" }}>
+                    <Mail className="w-7 h-7" style={{ color: "#2F80ED" }} />
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-center mb-2" style={{ color: "#B9C0C8" }}>
-                  ¿Olvidaste tu contraseña?
+                <h2 className="text-2xl font-bold text-center mb-1" style={{ color: "#B9C0C8" }}>
+                  Recuperar contraseña
                 </h2>
-                <p className="text-sm text-center mb-2" style={{ color: "#6B7280" }}>
-                  Te enviaremos un código de 6 dígitos que expira en 15 minutos
+                <p className="text-sm text-center mb-1" style={{ color: "#6B7280" }}>
+                  Te enviaremos un código de 6 dígitos
                 </p>
-
-                {sendCode.error && (
-                  <div className="mb-4 p-3 rounded-lg border border-red-800 bg-red-950/50">
-                    <p className="text-sm text-red-400">{sendCode.error.message}</p>
+                <p className="text-xs text-center mb-6" style={{ color: "#6B7280" }}>
+                  El código expira en 15 minutos
+                </p>
+                {sendCode.isError && (
+                  <div className="mb-4 px-4 py-3 rounded-lg border text-sm"
+                    style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "#f87171" }}>
+                    {sendCode.error?.message}
                   </div>
                 )}
-
-                <form onSubmit={step1Form.handleSubmit((d) => sendCode.mutate(d))} className="space-y-4 mt-6">
+                <form onSubmit={step1Form.handleSubmit((d) => sendCode.mutate(d))} className="space-y-4">
                   <div>
-                    <label htmlFor="forgot-email" className="block text-sm font-medium mb-2" style={{ color: "#F4F6F8" }}>
+                    <label className="block text-sm font-medium mb-2" style={{ color: "#B9C0C8" }}>
                       Correo electrónico
                     </label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#6B7280" }} />
                       <input
                         {...step1Form.register("email")}
-                        id="forgot-email"
-                        type="email"
-                        placeholder="tu@empresa.com"
-                        aria-label="Correo electrónico"
-                        className="w-full pl-10 pr-4 py-3 rounded-lg border text-sm outline-none transition-all focus:border-[#2F80ED]"
-                        style={{ background: "#080B0F", borderColor: step1Form.formState.errors.email ? "#ef4444" : "#1C2333", color: "#F4F6F8" }}
+                        type="email" placeholder="tu@empresa.com"
+                        className="w-full pl-10 pr-4 py-3 rounded-lg border text-sm outline-none transition-all"
+                        style={{ background: "#0A0D12", borderColor: step1Form.formState.errors.email ? "#ef4444" : "#1C2333", color: "#F4F6F8" }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = "#2F80ED"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(47,128,237,0.2)"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = step1Form.formState.errors.email ? "#ef4444" : "#1C2333"; e.currentTarget.style.boxShadow = "none"; }}
                       />
                     </div>
                     {step1Form.formState.errors.email && (
@@ -181,111 +301,144 @@ export function ForgotPasswordForm() {
                     )}
                   </div>
                   <button type="submit" disabled={sendCode.isPending}
-                    className="w-full py-3 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                    style={{ background: "#0E2F4F", color: "#F4F6F8" }}>
+                    className="w-full py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-60"
+                    style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #0A2040 100%)", color: "#F4F6F8" }}
+                    onMouseEnter={(e) => { if (!sendCode.isPending) (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, #2F80ED 0%, #0E2F4F 100%)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, #0E2F4F 0%, #0A2040 100%)"; }}>
                     {sendCode.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Enviando...</> : "Enviar código"}
                   </button>
                 </form>
-              </motion.div>
-            ) : (
-              <motion.div key="step2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}>
+              </div>
+            )}
+
+            {/* ── STEP 2: Verify Code ── */}
+            {step === 2 && (
+              <div>
                 <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center"
-                    style={{ background: "rgba(47, 128, 237, 0.1)", border: "1px solid rgba(47, 128, 237, 0.3)" }}>
-                    <Key className="w-8 h-8" style={{ color: "#2F80ED" }} />
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(47,128,237,0.1)", border: "1px solid rgba(47,128,237,0.3)" }}>
+                    <Mail className="w-7 h-7" style={{ color: "#2F80ED" }} />
                   </div>
                 </div>
-                <h2 className="text-2xl font-bold text-center mb-2" style={{ color: "#B9C0C8" }}>
-                  Restablecer contraseña
+                <h2 className="text-2xl font-bold text-center mb-1" style={{ color: "#B9C0C8" }}>
+                  Revisa tu correo
                 </h2>
-                <p className="text-sm text-center mb-6" style={{ color: "#6B7280" }}>
-                  Código enviado a <span style={{ color: "#B9C0C8" }}>{email}</span>
+                <p className="text-sm text-center mb-1" style={{ color: "#6B7280" }}>
+                  Código enviado a{" "}
+                  <span style={{ color: "#B9C0C8" }}>{maskEmail(email)}</span>
                 </p>
-
-                {resetPassword.error && (
-                  <div className="mb-4 p-3 rounded-lg border border-red-800 bg-red-950/50">
-                    <p className="text-sm text-red-400">{resetPassword.error.message}</p>
+                <p className="text-xs text-center mb-6" style={{ color: "#6B7280" }}>
+                  Ingresa el código de 6 dígitos que recibiste
+                </p>
+                {verifyCode.isError && (
+                  <div className="mb-4 px-4 py-3 rounded-lg border text-sm"
+                    style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "#f87171" }}>
+                    {verifyCode.error?.message}
                   </div>
                 )}
-
-                <form onSubmit={step2Form.handleSubmit((d) => resetPassword.mutate(d))} className="space-y-4">
-                  <div>
-                    <label htmlFor="reset-code" className="block text-sm font-medium mb-2" style={{ color: "#F4F6F8" }}>Código de verificación</label>
-                    <input
-                      {...step2Form.register("code")}
-                      id="reset-code"
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={6}
-                      placeholder="000000"
-                      aria-label="Código de verificación"
-                      className="w-full px-4 py-3 rounded-lg border text-sm outline-none transition-all text-center tracking-widest font-mono"
-                      style={{ background: "#080B0F", borderColor: "#1C2333", color: "#F4F6F8" }}
-                    />
-                    {step2Form.formState.errors.code && (
-                      <p className="mt-1 text-xs text-red-400">{step2Form.formState.errors.code.message}</p>
-                    )}
+                <div className="mb-6">
+                  <OtpInputs
+                    onComplete={(code) => verifyCode.mutate(code)}
+                    disabled={verifyCode.isPending}
+                  />
+                </div>
+                {verifyCode.isPending && (
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <Loader2 className="w-4 h-4 animate-spin" style={{ color: "#2F80ED" }} />
+                    <span className="text-sm" style={{ color: "#6B7280" }}>Verificando...</span>
                   </div>
+                )}
+                <button
+                  onClick={() => sendCode.mutate({ email })}
+                  disabled={sendCode.isPending}
+                  className="w-full text-sm py-2 transition-colors hover:text-[#2F80ED] disabled:opacity-50"
+                  style={{ color: "#6B7280" }}
+                >
+                  {sendCode.isPending ? "Reenviando..." : "¿No recibiste el código? Reenviar"}
+                </button>
+              </div>
+            )}
+
+            {/* ── STEP 3: New Password ── */}
+            {step === 3 && (
+              <div>
+                <div className="flex justify-center mb-6">
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                    style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)" }}>
+                    <Lock className="w-7 h-7" style={{ color: "#22c55e" }} />
+                  </div>
+                </div>
+                <h2 className="text-2xl font-bold text-center mb-1" style={{ color: "#B9C0C8" }}>
+                  Nueva contraseña
+                </h2>
+                <p className="text-sm text-center mb-6" style={{ color: "#6B7280" }}>
+                  Crea una contraseña segura
+                </p>
+                {resetPassword.isError && (
+                  <div className="mb-4 px-4 py-3 rounded-lg border text-sm"
+                    style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.3)", color: "#f87171" }}>
+                    {resetPassword.error?.message}
+                  </div>
+                )}
+                <form onSubmit={step3Form.handleSubmit((d) => resetPassword.mutate(d))} className="space-y-4">
                   <div>
-                    <label htmlFor="new-password" className="block text-sm font-medium mb-2" style={{ color: "#F4F6F8" }}>Nueva contraseña</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: "#B9C0C8" }}>Nueva contraseña</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#6B7280" }} />
                       <input
-                        {...step2Form.register("password")}
-                        id="new-password"
-                        type={showPass ? "text" : "password"}
-                        placeholder="••••••••"
-                        aria-label="Nueva contraseña"
+                        {...step3Form.register("password")}
+                        type={showPass ? "text" : "password"} placeholder="••••••••"
                         className="w-full pl-10 pr-12 py-3 rounded-lg border text-sm outline-none transition-all"
-                        style={{ background: "#080B0F", borderColor: "#1C2333", color: "#F4F6F8" }}
+                        style={{ background: "#0A0D12", borderColor: step3Form.formState.errors.password ? "#ef4444" : "#1C2333", color: "#F4F6F8" }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = "#2F80ED"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(47,128,237,0.2)"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = step3Form.formState.errors.password ? "#ef4444" : "#1C2333"; e.currentTarget.style.boxShadow = "none"; }}
                       />
                       <button type="button" onClick={() => setShowPass(!showPass)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle password">
+                        className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle">
                         {showPass ? <EyeOff className="w-4 h-4" style={{ color: "#6B7280" }} /> : <Eye className="w-4 h-4" style={{ color: "#6B7280" }} />}
                       </button>
                     </div>
-                    <PasswordStrength password={step2Form.watch("password") ?? ""} />
-                    {step2Form.formState.errors.password && (
-                      <p className="mt-1 text-xs text-red-400">{step2Form.formState.errors.password.message}</p>
+                    <PasswordStrength password={step3Form.watch("password") ?? ""} />
+                    {step3Form.formState.errors.password && (
+                      <p className="mt-1 text-xs text-red-400">{step3Form.formState.errors.password.message}</p>
                     )}
                   </div>
                   <div>
-                    <label htmlFor="confirm-password" className="block text-sm font-medium mb-2" style={{ color: "#F4F6F8" }}>Confirmar contraseña</label>
+                    <label className="block text-sm font-medium mb-2" style={{ color: "#B9C0C8" }}>Confirmar contraseña</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#6B7280" }} />
                       <input
-                        {...step2Form.register("password_confirmation")}
-                        id="confirm-password"
-                        type={showConfirm ? "text" : "password"}
-                        placeholder="••••••••"
-                        aria-label="Confirmar contraseña"
+                        {...step3Form.register("password_confirmation")}
+                        type={showConfirm ? "text" : "password"} placeholder="••••••••"
                         className="w-full pl-10 pr-12 py-3 rounded-lg border text-sm outline-none transition-all"
-                        style={{ background: "#080B0F", borderColor: "#1C2333", color: "#F4F6F8" }}
+                        style={{ background: "#0A0D12", borderColor: step3Form.formState.errors.password_confirmation ? "#ef4444" : "#1C2333", color: "#F4F6F8" }}
+                        onFocus={(e) => { e.currentTarget.style.borderColor = "#2F80ED"; e.currentTarget.style.boxShadow = "0 0 0 2px rgba(47,128,237,0.2)"; }}
+                        onBlur={(e) => { e.currentTarget.style.borderColor = step3Form.formState.errors.password_confirmation ? "#ef4444" : "#1C2333"; e.currentTarget.style.boxShadow = "none"; }}
                       />
                       <button type="button" onClick={() => setShowConfirm(!showConfirm)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle confirm password">
+                        className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Toggle">
                         {showConfirm ? <EyeOff className="w-4 h-4" style={{ color: "#6B7280" }} /> : <Eye className="w-4 h-4" style={{ color: "#6B7280" }} />}
                       </button>
                     </div>
-                    {step2Form.formState.errors.password_confirmation && (
-                      <p className="mt-1 text-xs text-red-400">{step2Form.formState.errors.password_confirmation.message}</p>
+                    {step3Form.formState.errors.password_confirmation && (
+                      <p className="mt-1 text-xs text-red-400">{step3Form.formState.errors.password_confirmation.message}</p>
                     )}
                   </div>
                   <button type="submit" disabled={resetPassword.isPending}
-                    className="w-full py-3 px-4 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-70"
-                    style={{ background: "#0E2F4F", color: "#F4F6F8" }}>
-                    {resetPassword.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Restableciendo...</> : "Restablecer contraseña"}
+                    className="w-full py-3 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-300 disabled:opacity-60"
+                    style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #0A2040 100%)", color: "#F4F6F8" }}
+                    onMouseEnter={(e) => { if (!resetPassword.isPending) (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, #2F80ED 0%, #0E2F4F 100%)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, #0E2F4F 0%, #0A2040 100%)"; }}>
+                    {resetPassword.isPending ? <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</> : "Restablecer contraseña"}
                   </button>
                 </form>
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          </div>
 
           <div className="mt-6 text-center">
-            <Link href="/login" className="flex items-center justify-center gap-2 text-sm transition-colors hover:text-[#2F80ED]"
+            <Link href="/login"
+              className="flex items-center justify-center gap-2 text-sm transition-colors hover:text-[#2F80ED]"
               style={{ color: "#6B7280" }}>
               <ArrowLeft className="w-3 h-3" />
               Volver al inicio de sesión

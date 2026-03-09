@@ -1,21 +1,34 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const publicRoutes = ["/login", "/two-factor", "/forgot-password", "/reset-password"];
+const PUBLIC_ROUTES = [
+  "/login",
+  "/two-factor",
+  "/forgot-password",
+  "/reset-password",
+];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-
-  if (pathname === "/") return NextResponse.next();
-
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
   const token = request.cookies.get("cmf_token")?.value;
+  const isPublic = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
 
-  if (!isPublicRoute && !token) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Root redirect
+  if (pathname === "/") {
+    return NextResponse.redirect(
+      new URL(token ? "/dashboard" : "/login", request.url)
+    );
   }
 
-  if (isPublicRoute && token && pathname !== "/two-factor") {
+  // Auth check for protected routes
+  if (!isPublic && !token) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Already authenticated → redirect away from login
+  if (isPublic && token && pathname === "/login") {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
@@ -23,7 +36,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)"],
 };

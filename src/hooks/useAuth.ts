@@ -2,12 +2,15 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import apiClient from "@/lib/axios";
 import { useAuthStore } from "@/store/authStore";
+import { getRedirectByRole } from "@/types/auth";
 import type {
   LoginRequest,
   LoginResponse,
-  TwoFactorRequest,
+  TwoFactorVerifyRequest,
+  User,
 } from "@/types/auth";
 import type { ApiResponse } from "@/types/api";
 
@@ -20,12 +23,12 @@ export function useLogin() {
       apiClient.post<never, ApiResponse<LoginResponse>>("/auth/login", data),
     onSuccess: (response) => {
       const data = response.data;
-      if (data.requires_2fa && data.two_factor_token) {
-        setRequires2FA(data.two_factor_token);
+      if (data.requires_2fa && data.token) {
+        setRequires2FA(data.token);
         router.push("/two-factor");
       } else if (data.user && data.token) {
         setAuth(data.user, data.token);
-        router.push("/dashboard");
+        router.push(getRedirectByRole(data.user));
       }
     },
   });
@@ -39,16 +42,14 @@ export function useVerify2FA() {
     mutationFn: (code: string) =>
       apiClient.post<never, ApiResponse<LoginResponse>>(
         "/auth/two-factor/verify",
-        {
-          code,
-          two_factor_token: twoFactorToken ?? "",
-        } satisfies TwoFactorRequest
+        { token: twoFactorToken ?? "", code } satisfies TwoFactorVerifyRequest
       ),
     onSuccess: (response) => {
       const data = response.data;
       if (data.user && data.token) {
         setAuth(data.user, data.token);
-        router.push("/dashboard");
+        toast.success("Verificación exitosa");
+        router.push(getRedirectByRole(data.user));
       }
     },
   });
@@ -60,12 +61,27 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: (): Promise<unknown> =>
-      token
-        ? apiClient.post("/auth/logout")
-        : Promise.resolve(),
+      token ? apiClient.post("/auth/logout") : Promise.resolve(),
     onSettled: () => {
       clearAuth();
       router.push("/login");
+    },
+  });
+}
+
+export function useMe() {
+  const { setAuth, token } = useAuthStore();
+
+  return useMutation({
+    mutationFn: () =>
+      apiClient.get<never, ApiResponse<{ user: User }>>("/auth/me"),
+    onSuccess: (response) => {
+      if (response.data.user && token) {
+        setAuth(response.data.user, token);
+      }
+    },
+    onError: () => {
+      useAuthStore.getState().clearAuth();
     },
   });
 }

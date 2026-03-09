@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@/types/auth";
 
-// Cookie helpers so middleware can read the token
 function setCookie(name: string, value: string, days = 7) {
   if (typeof document === "undefined") return;
   const expires = new Date(Date.now() + days * 86400000).toUTCString();
@@ -18,6 +17,7 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   requires2FA: boolean;
   twoFactorToken: string | null;
 }
@@ -25,6 +25,7 @@ interface AuthState {
 interface AuthActions {
   setAuth: (user: User, token: string) => void;
   setRequires2FA: (twoFactorToken: string) => void;
+  setLoading: (loading: boolean) => void;
   clearAuth: () => void;
 }
 
@@ -36,6 +37,7 @@ export const useAuthStore = create<AuthStore>()(
       user: null,
       token: null,
       isAuthenticated: false,
+      isLoading: false,
       requires2FA: false,
       twoFactorToken: null,
 
@@ -45,6 +47,7 @@ export const useAuthStore = create<AuthStore>()(
           user,
           token,
           isAuthenticated: true,
+          isLoading: false,
           requires2FA: false,
           twoFactorToken: null,
         });
@@ -57,7 +60,10 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
           token: null,
           isAuthenticated: false,
+          isLoading: false,
         }),
+
+      setLoading: (loading) => set({ isLoading: loading }),
 
       clearAuth: () => {
         deleteCookie("cmf_token");
@@ -65,13 +71,12 @@ export const useAuthStore = create<AuthStore>()(
           user: null,
           token: null,
           isAuthenticated: false,
+          isLoading: false,
           requires2FA: false,
           twoFactorToken: null,
         });
       },
     }),
-    {
-      name: "cmf-auth",
-    }
+    { name: "cmf-auth" }
   )
 );
