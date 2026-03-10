@@ -1,40 +1,34 @@
 "use client"
 
-import { ChartAreaInteractive } from "@/components/dashboard/ChartAreaInteractive"
-import { DataTable } from "@/components/dashboard/DataTable"
-import { SectionCards } from "@/components/dashboard/SectionCards"
 import { SiteHeader } from "@/components/dashboard/SiteHeader"
+import { DirectorDashboard } from "@/components/dashboard/widgets/DirectorDashboard"
+import { JefeAreaDashboard } from "@/components/dashboard/widgets/JefeAreaDashboard"
+import { OperadorDashboard } from "@/components/dashboard/widgets/OperadorDashboard"
+import { RhDashboard } from "@/components/dashboard/widgets/RhDashboard"
+import { SuperAdminDashboard } from "@/components/dashboard/widgets/SuperAdminDashboard"
+import { DASHBOARD_BY_ROLE } from "@/config/dashboard-by-role"
 import { useAuthStore } from "@/store/authStore"
 import { getUserRole } from "@/types/auth"
 
-import data from "../data.json"
-
-const ROLE_TITLE: Record<string, string> = {
-  super_admin: "Panel General",
-  director: "Dashboard",
-  rh: "Recursos Humanos",
-  jefe_area: "Mi Área",
-  operador: "Dispositivos",
-}
+const WIDGET_MAP = {
+  SuperAdminDashboard,
+  DirectorDashboard,
+  RhDashboard,
+  JefeAreaDashboard,
+  OperadorDashboard,
+} as const
 
 export default function DashboardPage() {
   const { user } = useAuthStore()
   const role = user ? getUserRole(user) : "operador"
-  const title = ROLE_TITLE[role] ?? "Dashboard"
+  const config = DASHBOARD_BY_ROLE[role] ?? DASHBOARD_BY_ROLE.operador
+  const Widget = WIDGET_MAP[config.widget]
 
   return (
     <>
-      <SiteHeader title={title} />
-      <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-2">
-          <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-            <SectionCards />
-            <div className="px-4 lg:px-6">
-              <ChartAreaInteractive />
-            </div>
-            <DataTable data={data} />
-          </div>
-        </div>
+      <SiteHeader title={config.title} />
+      <div className="flex flex-1 flex-col overflow-auto">
+        <Widget />
       </div>
     </>
   )

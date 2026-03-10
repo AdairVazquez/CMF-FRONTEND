@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { User } from "@/types/auth";
+import { getUserRole } from "@/types/auth";
 
 function setCookie(name: string, value: string, days = 7) {
   if (typeof document === "undefined") return;
@@ -43,6 +44,7 @@ export const useAuthStore = create<AuthStore>()(
 
       setAuth: (user, token) => {
         setCookie("cmf_token", token);
+        setCookie("cmf_role", getUserRole(user));
         set({
           user,
           token,
@@ -67,6 +69,7 @@ export const useAuthStore = create<AuthStore>()(
 
       clearAuth: () => {
         deleteCookie("cmf_token");
+        deleteCookie("cmf_role");
         set({
           user: null,
           token: null,

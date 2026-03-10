@@ -1,11 +1,24 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import {
+  ActivityIcon,
+  BarChart2Icon,
   BriefcaseIcon,
-  BuildingIcon,
+  Building2Icon,
+  CalendarCheckIcon,
+  CalendarXIcon,
+  ClockIcon,
+  DownloadIcon,
+  FileTextIcon,
+  LayersIcon,
   LayoutDashboardIcon,
   MonitorIcon,
+  PackageIcon,
+  ScrollTextIcon,
+  SettingsIcon,
+  UsersIcon,
 } from "lucide-react"
 
 import { NavMain, type NavMainItem } from "@/components/dashboard/NavMain"
@@ -24,6 +37,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
@@ -36,65 +50,114 @@ const ROLE_ACCENT: Record<string, string> = {
   operador: "#6B7280",
 }
 
-const NAV_MAIN_BY_ROLE: Record<string, NavMainItem[]> = {
+interface NavSection {
+  label: string
+  items: NavMainItem[]
+}
+
+const NAV_SECTIONS_BY_ROLE: Record<string, NavSection[]> = {
   super_admin: [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
     {
-      title: "Operación",
-      icon: BriefcaseIcon,
+      label: "Inicio",
       items: [
-        { title: "Empleados", url: "/dashboard/empleados" },
-        { title: "Asistencia", url: "/dashboard/asistencia" },
-        { title: "Reportes", url: "/dashboard/reportes" },
+        { title: "Panel Global", url: "/dashboard", icon: LayoutDashboardIcon },
       ],
     },
     {
-      title: "Administración",
-      icon: BuildingIcon,
+      label: "Gestión SaaS",
       items: [
-        { title: "Empresas", url: "/dashboard/empresas" },
-        { title: "Usuarios", url: "/dashboard/usuarios" },
-        { title: "Roles", url: "/dashboard/roles" },
-        { title: "Seguridad", url: "/dashboard/seguridad" },
-        { title: "Dispositivos", url: "/dashboard/dispositivos" },
+        { title: "Empresas", url: "/dashboard/empresas", icon: Building2Icon },
+        { title: "Usuarios", url: "/dashboard/usuarios", icon: UsersIcon },
+        { title: "Planes y módulos", url: "/dashboard/planes", icon: PackageIcon },
+      ],
+    },
+    {
+      label: "Sistema",
+      items: [
+        { title: "Health check", url: "/dashboard/sistema", icon: ActivityIcon },
+        { title: "Logs", url: "/dashboard/logs", icon: ScrollTextIcon },
       ],
     },
   ],
   director: [
-    { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
     {
-      title: "Operación",
-      icon: BriefcaseIcon,
+      label: "Inicio",
       items: [
-        { title: "Empleados", url: "/dashboard/empleados" },
-        { title: "Asistencia", url: "/dashboard/asistencia" },
-        { title: "Reportes", url: "/dashboard/reportes" },
+        { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
+      ],
+    },
+    {
+      label: "Operación",
+      items: [
+        { title: "Asistencia", url: "/dashboard/asistencia", icon: CalendarCheckIcon },
+        { title: "Empleados", url: "/dashboard/empleados", icon: UsersIcon },
+        { title: "Dispositivos", url: "/dashboard/dispositivos", icon: MonitorIcon },
+      ],
+    },
+    {
+      label: "Administración",
+      items: [
+        { title: "Sucursales", url: "/dashboard/sucursales", icon: Building2Icon },
+        { title: "Departamentos", url: "/dashboard/departamentos", icon: LayersIcon },
+        { title: "Turnos", url: "/dashboard/turnos", icon: ClockIcon },
+        { title: "Usuarios", url: "/dashboard/usuarios", icon: UsersIcon },
+      ],
+    },
+    {
+      label: "Reportes",
+      items: [
+        { title: "Asistencia", url: "/dashboard/reportes/asistencia", icon: BarChart2Icon },
+        { title: "Retardos", url: "/dashboard/reportes/retardos", icon: ClockIcon },
+        { title: "Exportar", url: "/dashboard/reportes/exportar", icon: DownloadIcon },
       ],
     },
   ],
   rh: [
     {
-      title: "Operación",
-      icon: BriefcaseIcon,
+      label: "Inicio",
       items: [
-        { title: "Asistencia", url: "/dashboard/asistencia" },
-        { title: "Empleados", url: "/dashboard/empleados" },
-        { title: "Reportes", url: "/dashboard/reportes" },
+        { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
+      ],
+    },
+    {
+      label: "Personal",
+      items: [
+        { title: "Empleados", url: "/dashboard/empleados", icon: UsersIcon },
+        { title: "Asistencia", url: "/dashboard/asistencia", icon: CalendarCheckIcon },
+        { title: "Ausencias", url: "/dashboard/ausencias", icon: CalendarXIcon },
+      ],
+    },
+    {
+      label: "Reportes",
+      items: [
+        { title: "Asistencia", url: "/dashboard/reportes/asistencia", icon: FileTextIcon },
+        { title: "Exportar", url: "/dashboard/reportes/exportar", icon: DownloadIcon },
       ],
     },
   ],
   jefe_area: [
     {
-      title: "Operación",
-      icon: BriefcaseIcon,
+      label: "Inicio",
       items: [
-        { title: "Asistencia", url: "/dashboard/asistencia" },
-        { title: "Empleados", url: "/dashboard/empleados" },
+        { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
+      ],
+    },
+    {
+      label: "Mi Área",
+      items: [
+        { title: "Asistencia", url: "/dashboard/asistencia", icon: CalendarCheckIcon },
+        { title: "Ausencias", url: "/dashboard/ausencias", icon: CalendarXIcon },
       ],
     },
   ],
   operador: [
-    { title: "Dispositivos", url: "/dashboard/dispositivos", icon: MonitorIcon },
+    {
+      label: "Inicio",
+      items: [
+        { title: "Dashboard", url: "/dashboard", icon: LayoutDashboardIcon },
+        { title: "Dispositivos", url: "/dashboard/dispositivos", icon: MonitorIcon },
+      ],
+    },
   ],
 }
 
@@ -127,7 +190,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   }, [])
 
   const role = user ? getUserRole(user) : "operador"
-  const navItems = NAV_MAIN_BY_ROLE[role] ?? NAV_MAIN_BY_ROLE.operador
+  const navSections = NAV_SECTIONS_BY_ROLE[role] ?? NAV_SECTIONS_BY_ROLE.operador
   const accent = ROLE_ACCENT[role] ?? "#0E2F4F"
   const projects = user ? getProjectsByRole(user, role) : []
 
@@ -172,7 +235,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navItems} sectionLabel="Módulos" />
+        {navSections.map((section) => (
+          <NavMain
+            key={section.label}
+            items={section.items}
+            sectionLabel={section.label}
+          />
+        ))}
         {!isHydrated ? (
           <NavProjectsSkeleton />
         ) : (
@@ -180,6 +249,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         )}
       </SidebarContent>
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Configuración">
+              <Link href="/dashboard/configuracion">
+                <SettingsIcon />
+                <span>Configuración</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         {user && <NavUser user={user} />}
       </SidebarFooter>
       <SidebarRail />
