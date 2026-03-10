@@ -1,12 +1,14 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import {
-  Folder,
-  Forward,
+  ExternalLinkIcon,
+  LinkIcon,
   MoreHorizontal,
   Trash2,
   type LucideIcon,
 } from "lucide-react"
+import { toast } from "sonner"
 
 import {
   DropdownMenu,
@@ -24,21 +26,51 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuthStore } from "@/store/authStore"
+import { getUserRole } from "@/types/auth"
+
+export interface NavProjectItem {
+  name: string
+  url: string
+  icon: LucideIcon
+}
 
 export function NavProjects({
   projects,
+  label = "Accesos Rápidos",
 }: {
-  projects: {
-    name: string
-    url: string
-    icon: LucideIcon
-  }[]
+  projects: NavProjectItem[]
+  label?: string
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+  const { user } = useAuthStore()
+  const role = user ? getUserRole(user) : "operador"
+  const isSuperAdmin = role === "super_admin"
+
+  if (projects.length === 0) return null
+
+  function handleView(url: string) {
+    router.push(url)
+  }
+
+  function handleShare(url: string, name: string) {
+    const fullUrl = `${window.location.origin}${url}`
+    navigator.clipboard
+      .writeText(fullUrl)
+      .then(() => toast.success(`Enlace de "${name}" copiado al portapapeles`))
+      .catch(() => toast.error("No se pudo copiar el enlace"))
+  }
+
+  function handleDelete(name: string) {
+    // Solo super_admin puede eliminar — mostrar confirmación en consola por ahora
+    // En producción: abrir modal de confirmación y llamar al endpoint DELETE
+    toast.warning(`Eliminar "${name}" requiere confirmación — funcionalidad próximamente`)
+  }
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -52,7 +84,7 @@ export function NavProjects({
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction showOnHover>
                   <MoreHorizontal />
-                  <span className="sr-only">More</span>
+                  <span className="sr-only">Opciones</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -60,29 +92,36 @@ export function NavProjects({
                 side={isMobile ? "bottom" : "right"}
                 align={isMobile ? "end" : "start"}
               >
-                <DropdownMenuItem>
-                  <Folder className="text-muted-foreground" />
-                  <span>View Project</span>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => handleView(item.url)}
+                >
+                  <ExternalLinkIcon className="text-muted-foreground" />
+                  <span>Ver</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Forward className="text-muted-foreground" />
-                  <span>Share Project</span>
+                <DropdownMenuItem
+                  className="cursor-pointer"
+                  onClick={() => handleShare(item.url, item.name)}
+                >
+                  <LinkIcon className="text-muted-foreground" />
+                  <span>Copiar enlace</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Trash2 className="text-muted-foreground" />
-                  <span>Delete Project</span>
-                </DropdownMenuItem>
+                {isSuperAdmin && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                      onClick={() => handleDelete(item.name)}
+                    >
+                      <Trash2 className="text-destructive" />
+                      <span>Eliminar</span>
+                    </DropdownMenuItem>
+                  </>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         ))}
-        <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
-            <MoreHorizontal className="text-sidebar-foreground/70" />
-            <span>More</span>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   )
