@@ -28,6 +28,8 @@ export interface User {
 
 export interface LoginResponse {
   requires_2fa?: boolean;
+  requires_2fa_setup?: boolean;
+  is_setup?: boolean;
   token: string;
   user?: User;
 }

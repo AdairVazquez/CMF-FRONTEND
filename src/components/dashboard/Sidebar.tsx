@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
+import { CmfIcon } from "@/components/shared/CmfIcon";
 import {
   LayoutDashboard, Users, Clock, CreditCard, Monitor,
   BarChart2, Calendar, UserCog, ChevronLeft, ChevronRight,
@@ -128,10 +129,10 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && (
           <div className="flex items-center gap-2.5 nav-label">
             <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)", color: "#F4F6F8" }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)" }}
             >
-              C
+              <CmfIcon size={16} color="#F4F6F8" />
             </div>
             <span
               className="text-sm font-semibold whitespace-nowrap"

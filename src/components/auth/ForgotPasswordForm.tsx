@@ -7,6 +7,7 @@ import { z } from "zod";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Mail, Lock, Eye, EyeOff, Loader2, ArrowLeft, Check } from "lucide-react";
+import { CmfIcon } from "@/components/shared/CmfIcon";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -219,10 +220,10 @@ export function ForgotPasswordForm() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
-            style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)", color: "#F4F6F8" }}
+            className="w-10 h-10 rounded-xl flex items-center justify-center"
+            style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)" }}
           >
-            CMF
+            <CmfIcon size={22} color="#F4F6F8" />
           </div>
         </div>
 

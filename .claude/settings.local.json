@@ -1,6 +1,13 @@
 {
+  "permissions": {
+    "allow": [
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__read_text_file",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "shadcn"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

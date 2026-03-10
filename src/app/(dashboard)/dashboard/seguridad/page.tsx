@@ -1,56 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { Shield, QrCode, Key, CheckCircle, XCircle } from "lucide-react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
+import { Shield, CheckCircle, XCircle, Mail } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import apiClient from "@/lib/axios";
 import type { ApiResponse } from "@/types/api";
 import { useAuthStore } from "@/store/authStore";
+import { getRedirectByRole } from "@/types/auth";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface Enable2FAData {
-  qr_code: string;
-  secret: string;
-}
-
 export default function SeguridadPage() {
-  const { user } = useAuthStore();
-  const [code, setCode] = useState("");
-  const [showSetup, setShowSetup] = useState(false);
+  const router = useRouter();
+  const { user, setAuth, token } = useAuthStore();
+  const [disablePassword, setDisablePassword] = useState("");
 
-  const { data: setupData, refetch: startSetup, isFetching } = useQuery({
-    queryKey: ["2fa-setup"],
-    queryFn: () => apiClient.get<never, ApiResponse<Enable2FAData>>("/auth/2fa/enable"),
-    enabled: false,
-  });
-
-  const confirmMutation = useMutation({
-    mutationFn: (code: string) =>
-      apiClient.post("/auth/2fa/confirm", { code }),
+  const enableMutation = useMutation({
+    mutationFn: () => apiClient.post<never, ApiResponse<never>>("/auth/two-factor/enable"),
     onSuccess: () => {
-      toast.success("Autenticación 2FA activada correctamente");
-      setShowSetup(false);
-      setCode("");
+      toast.success("2FA activado correctamente.");
+      if (user && token) {
+        const updatedUser = { ...user, two_factor_enabled: true, two_factor_confirmed_at: new Date().toISOString() } as typeof user;
+        setAuth(updatedUser, token);
+        router.push(getRedirectByRole(updatedUser));
+      }
     },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const disableMutation = useMutation({
-    mutationFn: () => apiClient.post("/auth/2fa/disable"),
-    onSuccess: () => toast.success("Autenticación 2FA desactivada"),
+    mutationFn: () => apiClient.post<never, ApiResponse<never>>("/auth/two-factor/disable", { password: disablePassword }),
+    onSuccess: () => {
+      toast.success("Autenticación 2FA desactivada.");
+      setDisablePassword("");
+      if (user && token) {
+        setAuth({ ...user, two_factor_enabled: false, two_factor_confirmed_at: null } as typeof user, token);
+      }
+    },
     onError: (err: Error) => toast.error(err.message),
   });
 
   const is2FAEnabled = user?.two_factor_enabled && user?.two_factor_confirmed_at;
-
-  const handleStartSetup = async () => {
-    setShowSetup(true);
-    await startSetup();
-  };
 
   return (
     <div>
@@ -68,20 +62,21 @@ export default function SeguridadPage() {
         className="p-6 rounded-xl border max-w-2xl"
         style={{ background: "#0D1117", borderColor: "#1C2333" }}
       >
+        {/* Estado actual */}
         <div className="flex items-start justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)" }}
             >
-              <Key className="w-5 h-5" style={{ color: "#7C3AED" }} />
+              <Mail className="w-5 h-5" style={{ color: "#7C3AED" }} />
             </div>
             <div>
               <h2 className="font-semibold" style={{ color: "#F4F6F8" }}>
                 Autenticación de dos factores
               </h2>
               <p className="text-sm" style={{ color: "#6B7280" }}>
-                Usa Google Authenticator o Authy
+                Al iniciar sesión recibirás un código de verificación en tu correo
               </p>
             </div>
           </div>
@@ -100,86 +95,48 @@ export default function SeguridadPage() {
           </div>
         </div>
 
-        {!is2FAEnabled && !showSetup && (
-          <Button
-            onClick={handleStartSetup}
-            disabled={isFetching}
-            style={{ background: "#7C3AED", color: "#fff" }}
-          >
-            {isFetching ? "Generando..." : "Activar 2FA"}
-          </Button>
-        )}
+        {/* Descripción */}
+        <div
+          className="p-4 rounded-lg mb-6 text-sm"
+          style={{ background: "#080B0F", border: "1px solid #1C2333", color: "#6B7280" }}
+        >
+          {is2FAEnabled ? (
+            <p>Cada vez que inicies sesión, enviaremos un código de 6 dígitos a <strong style={{ color: "#B9C0C8" }}>{user?.email}</strong>. Deberás ingresarlo para acceder.</p>
+          ) : (
+            <p>Activa el 2FA para agregar una capa extra de seguridad. Al iniciar sesión recibirás un código por correo electrónico en <strong style={{ color: "#B9C0C8" }}>{user?.email}</strong>.</p>
+          )}
+        </div>
 
-        {is2FAEnabled && (
-          <Button
-            variant="outline"
-            onClick={() => disableMutation.mutate()}
-            disabled={disableMutation.isPending}
-            style={{ borderColor: "#ef4444", color: "#ef4444", background: "transparent" }}
-          >
-            {disableMutation.isPending ? "Desactivando..." : "Desactivar 2FA"}
-          </Button>
-        )}
-
-        {showSetup && setupData?.data && (
-          <div className="space-y-6 mt-4">
-            <div className="space-y-3">
-              <p className="text-sm font-medium" style={{ color: "#B9C0C8" }}>
-                1. Escanea el código QR con tu app autenticadora
-              </p>
-              <div
-                className="inline-flex p-4 rounded-xl"
-                style={{ background: "#fff" }}
-                dangerouslySetInnerHTML={{ __html: setupData.data.qr_code }}
+        {/* Acción */}
+        {is2FAEnabled ? (
+          <div className="space-y-3">
+            <div className="space-y-1.5 max-w-xs">
+              <Label style={{ color: "#B9C0C8" }}>Confirma tu contraseña para desactivar</Label>
+              <Input
+                type="password"
+                value={disablePassword}
+                onChange={(e) => setDisablePassword(e.target.value)}
+                placeholder="Tu contraseña actual"
+                style={{ background: "#080B0F", borderColor: "#1C2333", color: "#F4F6F8" }}
               />
             </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium" style={{ color: "#B9C0C8" }}>
-                O ingresa la clave manualmente:
-              </p>
-              <code
-                className="block px-3 py-2 rounded-lg text-sm font-mono tracking-widest"
-                style={{ background: "#080B0F", color: "#2F80ED", border: "1px solid #1C2333" }}
-              >
-                {setupData.data.secret}
-              </code>
-            </div>
-
-            <div className="space-y-2">
-              <p className="text-sm font-medium" style={{ color: "#B9C0C8" }}>
-                2. Ingresa el código de 6 dígitos de tu app para confirmar
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 max-w-xs">
-                  <Label htmlFor="confirm-code" className="sr-only">Código 2FA</Label>
-                  <Input
-                    id="confirm-code"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                    placeholder="000000"
-                    maxLength={6}
-                    className="text-center font-mono tracking-[0.5em] text-lg"
-                    style={{ background: "#080B0F", borderColor: "#1C2333", color: "#F4F6F8" }}
-                  />
-                </div>
-                <Button
-                  onClick={() => confirmMutation.mutate(code)}
-                  disabled={code.length < 6 || confirmMutation.isPending}
-                  style={{ background: "#7C3AED", color: "#fff" }}
-                >
-                  {confirmMutation.isPending ? "Verificando..." : "Confirmar"}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <QrCode className="w-4 h-4" style={{ color: "#6B7280" }} />
-              <p className="text-xs" style={{ color: "#6B7280" }}>
-                Guarda la clave secreta en un lugar seguro. La necesitarás si pierdes acceso a tu app.
-              </p>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => disableMutation.mutate()}
+              disabled={disableMutation.isPending || !disablePassword}
+              style={{ borderColor: "#ef4444", color: "#ef4444", background: "transparent" }}
+            >
+              {disableMutation.isPending ? "Desactivando..." : "Desactivar 2FA"}
+            </Button>
           </div>
+        ) : (
+          <Button
+            onClick={() => enableMutation.mutate()}
+            disabled={enableMutation.isPending}
+            style={{ background: "#7C3AED", color: "#fff" }}
+          >
+            {enableMutation.isPending ? "Activando..." : "Activar 2FA"}
+          </Button>
         )}
       </div>
     </div>

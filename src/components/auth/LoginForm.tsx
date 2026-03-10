@@ -7,6 +7,7 @@ import { z } from "zod";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Mail, Lock, Eye, EyeOff, Loader2, ChevronDown } from "lucide-react";
+import { CmfIcon } from "@/components/shared/CmfIcon";
 import Link from "next/link";
 import { useLogin } from "@/hooks/useAuth";
 
@@ -102,10 +103,10 @@ export function LoginForm() {
         <div className="relative z-10 login-left-item">
           <div className="flex items-center gap-3">
             <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm"
-              style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)", color: "#F4F6F8" }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)" }}
             >
-              CMF
+              <CmfIcon size={22} color="#F4F6F8" />
             </div>
             <span
               className="text-xl font-semibold text-gradient-silver"
@@ -221,10 +222,10 @@ export function LoginForm() {
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs"
-              style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)", color: "#F4F6F8" }}
+              className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #2F80ED 100%)" }}
             >
-              CMF
+              <CmfIcon size={20} color="#F4F6F8" />
             </div>
             <span className="font-semibold" style={{ color: "#B9C0C8" }}>Control Laboral</span>
           </div>
