@@ -72,11 +72,11 @@ export function getUserRole(user: User): string {
 export function getRedirectByRole(user: User): string {
   const role = getUserRole(user);
   switch (role) {
-    case "super_admin": return "/dashboard";
+    case "super_admin": return "/dashboard/super";
     case "director":    return "/dashboard";
-    case "rh":          return "/dashboard";
-    case "jefe_area":   return "/dashboard";
-    case "operador":    return "/dashboard";
+    case "rh":          return "/dashboard/asistencia";
+    case "jefe_area":   return "/dashboard/asistencia";
+    case "operador":    return "/dashboard/dispositivos";
     default:            return "/dashboard";
   }
 }

@@ -22,12 +22,8 @@ export function TwoFactorForm() {
   const verify = useVerify2FA();
 
   useEffect(() => {
-    if (!twoFactorToken) router.push("/login");
-  }, [twoFactorToken, router]);
-
-  useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
+    if (twoFactorToken) inputRefs.current[0]?.focus();
+  }, [twoFactorToken]);
 
   /* ── Entrada ── */
   useGSAP(() => {
@@ -87,6 +83,30 @@ export function TwoFactorForm() {
       verify.mutate(pasted);
     }
   };
+
+  if (!twoFactorToken) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#0A0D12" }}>
+        <div className="w-full max-w-md p-8 rounded-2xl border text-center" style={{ background: "#0D1117", borderColor: "#1C2333" }}>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)" }}>
+            <Shield className="w-7 h-7" style={{ color: "#ef4444" }} />
+          </div>
+          <h2 className="text-xl font-bold mb-2" style={{ color: "#B9C0C8" }}>Sesión no iniciada</h2>
+          <p className="text-sm mb-6" style={{ color: "#6B7280" }}>
+            No hay una sesión de verificación activa. Por favor inicia sesión primero.
+          </p>
+          <Link
+            href="/login"
+            className="inline-flex items-center justify-center gap-2 w-full py-3 rounded-lg font-medium text-sm transition-all duration-300"
+            style={{ background: "linear-gradient(135deg, #0E2F4F 0%, #0A2040 100%)", color: "#F4F6F8" }}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver al inicio de sesión
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

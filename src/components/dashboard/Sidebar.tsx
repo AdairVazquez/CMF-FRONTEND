@@ -8,7 +8,7 @@ import { useGSAP } from "@gsap/react";
 import {
   LayoutDashboard, Users, Clock, CreditCard, Monitor,
   BarChart2, Calendar, UserCog, ChevronLeft, ChevronRight,
-  LogOut, Shield, Settings, Building2,
+  LogOut, Shield, Settings, Building2, TrendingUp, FileText, Activity,
 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { useLogout } from "@/hooks/useAuth";
@@ -30,11 +30,19 @@ interface NavGroup {
 
 const NAV_GROUPS: NavGroup[] = [
   {
-    section: "Principal",
+    section: "Módulos Principales",
     items: [
       { label: "Dashboard",    href: "/dashboard",              icon: LayoutDashboard, roles: ["super_admin","director","rh","jefe_area","operador"] },
-      { label: "Asistencia",   href: "/dashboard/asistencia",   icon: Clock,           roles: ["super_admin","director","rh","jefe_area","operador"] },
-      { label: "Empleados",    href: "/dashboard/empleados",    icon: Users,           roles: ["super_admin","director","rh","jefe_area"] },
+      { label: "Empleados",    href: "/dashboard/empleados",    icon: Users,           roles: ["super_admin","director","rh"] },
+      { label: "Asistencia",   href: "/dashboard/asistencia",   icon: Clock,           roles: ["super_admin","director","rh","jefe_area"] },
+    ],
+  },
+  {
+    section: "Administración",
+    items: [
+      { label: "Empresas",     href: "/dashboard/empresas",     icon: Building2,       roles: ["super_admin"] },
+      { label: "Usuarios",     href: "/dashboard/usuarios",     icon: UserCog,         roles: ["super_admin","director"] },
+      { label: "Roles",        href: "/dashboard/roles",        icon: Shield,          roles: ["super_admin"] },
     ],
   },
   {
@@ -49,20 +57,16 @@ const NAV_GROUPS: NavGroup[] = [
     section: "Reportes & Analytics",
     items: [
       { label: "Reportes",     href: "/dashboard/reportes",     icon: BarChart2,       roles: ["super_admin","director","rh"] },
-    ],
-  },
-  {
-    section: "Administración",
-    items: [
-      { label: "Empresas",     href: "/dashboard/empresas",     icon: Building2,       roles: ["super_admin"] },
-      { label: "Usuarios",     href: "/dashboard/usuarios",     icon: UserCog,         roles: ["super_admin","director"] },
-      { label: "Roles",        href: "/dashboard/roles",        icon: Shield,          roles: ["super_admin"] },
+      { label: "Analytics",    href: "/dashboard/analytics",    icon: TrendingUp,      roles: ["super_admin","director"] },
+      { label: "Auditoría",    href: "/dashboard/auditoria",    icon: FileText,        roles: ["super_admin"] },
     ],
   },
   {
     section: "Sistema",
     items: [
-      { label: "Seguridad",    href: "/dashboard/seguridad",    icon: Settings,        roles: ["super_admin","director","rh","jefe_area","operador"] },
+      { label: "Configuración",      href: "/dashboard/configuracion", icon: Settings,  roles: ["super_admin","director"] },
+      { label: "Estado del Sistema", href: "/dashboard/super",         icon: Activity,  roles: ["super_admin"] },
+      { label: "Seguridad",          href: "/dashboard/seguridad",     icon: Shield,    roles: ["super_admin","director","rh","jefe_area","operador"] },
     ],
   },
 ];
@@ -82,7 +86,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
   const filteredGroups = NAV_GROUPS.map((group) => ({
     ...group,
-    items: group.items.filter((item) => !item.roles || item.roles.includes(role)),
+    items: group.items
+      .filter((item) => !item.roles || item.roles.includes(role))
+      .map((item) =>
+        // Super admin Dashboard link goes to /dashboard/super
+        item.href === "/dashboard" && role === "super_admin"
+          ? { ...item, href: "/dashboard/super" }
+          : item
+      ),
   })).filter((group) => group.items.length > 0);
 
   const initials = user?.name

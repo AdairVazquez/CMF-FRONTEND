@@ -8,7 +8,7 @@ const PUBLIC_ROUTES = [
   "/reset-password",
 ];
 
-export function proxy(request: NextRequest) {
+export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get("cmf_token")?.value;
   const isPublic = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));

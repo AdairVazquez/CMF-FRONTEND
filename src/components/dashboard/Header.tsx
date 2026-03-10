@@ -19,16 +19,20 @@ import { es } from "date-fns/locale";
 
 const BREADCRUMB_MAP: Record<string, string> = {
   "/dashboard":               "Dashboard",
+  "/dashboard/super":         "Panel Super Admin",
   "/dashboard/empleados":     "Empleados",
   "/dashboard/asistencia":    "Asistencia",
   "/dashboard/tarjetas":      "Tarjetas NFC",
   "/dashboard/dispositivos":  "Dispositivos",
   "/dashboard/reportes":      "Reportes",
+  "/dashboard/analytics":     "Analytics",
+  "/dashboard/auditoria":     "Auditoría de Logs",
   "/dashboard/ausencias":     "Ausencias",
   "/dashboard/usuarios":      "Usuarios",
   "/dashboard/roles":         "Roles",
   "/dashboard/empresas":      "Empresas",
   "/dashboard/seguridad":     "Seguridad",
+  "/dashboard/configuracion": "Configuración",
   "/dashboard/perfil":        "Mi Perfil",
 };
 

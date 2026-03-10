@@ -19,11 +19,11 @@ const loginSchema = z.object({
 type LoginFormData = z.infer<typeof loginSchema>;
 
 const TEST_USERS = [
-  { email: "super@saas.com",          password: "password", role: "Super Admin"       },
-  { email: "director@hospital.com",   password: "password", role: "Director"          },
-  { email: "rh@hospital.com",         password: "password", role: "RH"                },
-  { email: "jefe@hospital.com",       password: "password", role: "Jefe de Área"      },
-  { email: "operador@hospital.com",   password: "password", role: "Operador"          },
+  { email: "joshuapaz24@gmail.com",       password: "CMF@2026!", role: "Super Admin"  },
+  { email: "Adairvazquezcr@gmail.com",    password: "CMF@2026!", role: "Director"     },
+  { email: "chrisaban08@gmail.com",       password: "CMF@2026!", role: "RH"           },
+  { email: "joshuapaz2412@gmail.com",     password: "CMF@2026!", role: "Jefe de Área" },
+  { email: "joshuapaz1224@gmail.com",     password: "CMF@2026!", role: "Operador"     },
 ];
 
 export function LoginForm() {
