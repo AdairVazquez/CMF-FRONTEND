@@ -16,11 +16,10 @@ gsap.registerPlugin(useGSAP);
 
 export function TwoFactorForm() {
   const router = useRouter();
-  const { twoFactorToken: storeToken } = useAuthStore();
-  // Fallback: si Zustand aún no hidró desde localStorage, leer sessionStorage directamente
-  const twoFactorToken =
-    storeToken ||
-    (typeof window !== "undefined" ? sessionStorage.getItem("cmf_2fa_token") : null);
+  // No leer el token de forma síncrona — Zustand puede no haber rehydratado aún.
+  // En cambio, resolver en useEffect (solo cliente) para evitar el flash de "Sesión no iniciada".
+  const [twoFactorToken, setTwoFactorToken] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
   const [showSuccess, setShowSuccess] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -29,18 +28,25 @@ export function TwoFactorForm() {
   const shieldRef = useRef<HTMLDivElement>(null);
   const verify = useVerify2FA();
 
+  // Resolver el token una vez montado en el cliente (después de que Zustand rehydrate)
   useEffect(() => {
-    if (twoFactorToken) inputRefs.current[0]?.focus();
-  }, [twoFactorToken]);
+    const storeToken = useAuthStore.getState().twoFactorToken;
+    const sessionToken = sessionStorage.getItem("cmf_2fa_token");
+    const resolved = storeToken || sessionToken || null;
 
-  // Debug: verificar que el token llegó
-  useEffect(() => {
     if (process.env.NODE_ENV === "development") {
       console.log("[2FA] store token:", storeToken ?? "(null)");
-      console.log("[2FA] session token:", typeof window !== "undefined" ? sessionStorage.getItem("cmf_2fa_token") ?? "(null)" : "(SSR)");
-      console.log("[2FA] resolved token:", twoFactorToken ? `${twoFactorToken.slice(0, 8)}...` : "(null)");
+      console.log("[2FA] session token:", sessionToken ?? "(null)");
+      console.log("[2FA] resolved token:", resolved ? `${resolved.slice(0, 8)}...` : "(null)");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    setTwoFactorToken(resolved);
+    setIsHydrated(true);
+
+    if (resolved) {
+      // Pequeño delay para que el DOM esté listo antes de hacer focus
+      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+    }
   }, []);
 
   /* ── Entrada ── */
@@ -113,6 +119,16 @@ export function TwoFactorForm() {
     if (user) router.push(getRedirectByRole(user));
   };
 
+  // Mientras el cliente no ha resuelto el token: spinner neutro (evita flash de error)
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center" style={{ background: "#0A0D12" }}>
+        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: "#2F80ED" }} />
+      </div>
+    );
+  }
+
+  // Token definitivamente no existe después de haber resuelto
   if (!twoFactorToken) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center p-4" style={{ background: "#0A0D12" }}>

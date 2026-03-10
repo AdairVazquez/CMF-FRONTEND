@@ -23,7 +23,17 @@ apiClient.interceptors.request.use(
 );
 
 apiClient.interceptors.response.use(
-  (response) => response.data,
+  (response) => {
+    // ── DEBUG TEMPORAL ────────────────────────────────────────────
+    if (process.env.NODE_ENV === "development" && response.config.url?.includes("/auth/login")) {
+      console.log("=== LOGIN RAW AXIOS RESPONSE ===");
+      console.log("HTTP status:", response.status);
+      console.log("response.data (body completo):", JSON.stringify(response.data, null, 2));
+      console.log("response.data.data (el .data anidado):", JSON.stringify(response.data?.data, null, 2));
+    }
+    // ── FIN DEBUG ─────────────────────────────────────────────────
+    return response.data;
+  },
   (error: unknown) => {
     if (!axios.isAxiosError(error)) return Promise.reject(error);
 
