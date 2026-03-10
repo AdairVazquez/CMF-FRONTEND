@@ -1,58 +1,62 @@
 "use client"
 
-import { MailIcon, PlusCircleIcon, type LucideIcon } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { type LucideIcon } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import {
   SidebarGroup,
-  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: LucideIcon
-  }[]
-}) {
+export interface CmfNavItem {
+  title: string
+  url: string
+  icon: LucideIcon
+  badge?: number
+}
+
+export interface CmfNavGroup {
+  section: string
+  items: CmfNavItem[]
+}
+
+export function NavMain({ groups }: { groups: CmfNavGroup[] }) {
+  const pathname = usePathname()
+
   return (
-    <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
-        <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Quick Create"
-              className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
-            >
-              <PlusCircleIcon />
-              <span>Quick Create</span>
-            </SidebarMenuButton>
-            <Button
-              size="icon"
-              className="h-9 w-9 shrink-0 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <MailIcon />
-              <span className="sr-only">Inbox</span>
-            </Button>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <>
+      {groups.map((group) => (
+        <SidebarGroup key={group.section}>
+          <SidebarGroupLabel>{group.section}</SidebarGroupLabel>
+          <SidebarMenu>
+            {group.items.map((item) => {
+              const isActive =
+                pathname === item.url ||
+                (item.url !== "/dashboard" &&
+                  pathname.startsWith(item.url + "/"))
+
+              return (
+                <SidebarMenuItem key={item.url} className="nav-item">
+                  <SidebarMenuButton asChild isActive={isActive} tooltip={item.title}>
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                  {item.badge != null && item.badge > 0 && (
+                    <SidebarMenuBadge>{item.badge}</SidebarMenuBadge>
+                  )}
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroup>
+      ))}
+    </>
   )
 }
