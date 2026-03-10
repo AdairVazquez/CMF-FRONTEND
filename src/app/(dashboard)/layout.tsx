@@ -2,12 +2,15 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Header } from "@/components/dashboard/Header"
 import { useAuthStore } from "@/store/authStore"
+import { AppSidebar } from "@/components/dashboard/AppSidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   const router = useRouter()
   const { isAuthenticated } = useAuthStore()
 
@@ -32,12 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset>
-        <Header />
-        <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          {children}
-        </main>
-      </SidebarInset>
+      <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   )
 }

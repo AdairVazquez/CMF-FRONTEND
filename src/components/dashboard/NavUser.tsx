@@ -1,8 +1,16 @@
 "use client"
 
-import { ChevronsUpDown, LogOut, Shield } from "lucide-react"
+import {
+  BellIcon,
+  LogOutIcon,
+  MoreVerticalIcon,
+  UserCircleIcon,
+} from "lucide-react"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import {
+  Avatar,
+  AvatarFallback,
+} from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,25 +26,22 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useLogout } from "@/hooks/useAuth"
+import type { User } from "@/types/auth"
 
-export interface NavUserData {
-  name: string
-  email: string
-  initials: string
-  roleLabel: string
-  roleAccentColor: string
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
 }
 
-export function NavUser({
-  user,
-  onLogout,
-  isLoggingOut,
-}: {
-  user: NavUserData
-  onLogout: () => void
-  isLoggingOut: boolean
-}) {
+export function NavUser({ user }: { user: User }) {
   const { isMobile } = useSidebar()
+  const logout = useLogout()
+  const initials = getInitials(user.name)
 
   return (
     <SidebarMenu>
@@ -47,19 +52,18 @@ export function NavUser({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                <AvatarFallback
-                  className="rounded-lg text-white text-xs font-bold"
-                  style={{ background: user.roleAccentColor }}
-                >
-                  {user.initials}
+              <Avatar className="h-8 w-8 rounded-lg">
+                <AvatarFallback className="rounded-lg text-xs font-medium">
+                  {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{user.name}</span>
-                <span className="truncate text-xs opacity-70">{user.email}</span>
+                <span className="truncate font-medium">{user.name}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </span>
               </div>
-              <ChevronsUpDown className="ml-auto size-4" />
+              <MoreVerticalIcon className="ml-auto size-4" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
@@ -70,35 +74,37 @@ export function NavUser({
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg shrink-0">
-                  <AvatarFallback
-                    className="rounded-lg text-white text-xs font-bold"
-                    style={{ background: user.roleAccentColor }}
-                  >
-                    {user.initials}
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarFallback className="rounded-lg text-xs font-medium">
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{user.name}</span>
-                  <span className="truncate text-xs opacity-70">{user.email}</span>
+                  <span className="truncate font-medium">{user.name}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {user.email}
+                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="pointer-events-none opacity-60 gap-2">
-                <Shield className="size-4" />
-                <span>{user.roleLabel}</span>
+              <DropdownMenuItem>
+                <UserCircleIcon />
+                Mi perfil
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <BellIcon />
+                Notificaciones
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              onClick={onLogout}
-              disabled={isLoggingOut}
-              className="text-red-400 focus:text-red-400 focus:bg-red-950/30 gap-2"
+              onClick={() => logout.mutate()}
+              className="text-destructive focus:text-destructive"
             >
-              <LogOut className="size-4" />
-              <span>{isLoggingOut ? "Cerrando sesión..." : "Cerrar sesión"}</span>
+              <LogOutIcon />
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
