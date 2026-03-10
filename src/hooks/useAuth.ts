@@ -23,7 +23,7 @@ export function useLogin() {
       apiClient.post<never, ApiResponse<LoginResponse>>("/auth/login", data),
     onSuccess: (response) => {
       const data = response.data;
-      if (data.requires_2fa && data.token) {
+      if ((data.requires_2fa_setup || data.requires_2fa) && data.token) {
         setRequires2FA(data.token);
         router.push("/two-factor");
       } else if (data.user && data.token) {
@@ -48,8 +48,11 @@ export function useVerify2FA() {
       const data = response.data;
       if (data.user && data.token) {
         setAuth(data.user, data.token);
-        toast.success("Verificación exitosa");
-        router.push(getRedirectByRole(data.user));
+        if (!data.is_setup) {
+          toast.success("Verificación exitosa");
+          router.push(getRedirectByRole(data.user));
+        }
+        // When is_setup=true, TwoFactorForm handles animation + redirect
       }
     },
   });
