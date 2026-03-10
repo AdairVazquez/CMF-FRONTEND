@@ -16,7 +16,11 @@ gsap.registerPlugin(useGSAP);
 
 export function TwoFactorForm() {
   const router = useRouter();
-  const { twoFactorToken } = useAuthStore();
+  const { twoFactorToken: storeToken } = useAuthStore();
+  // Fallback: si Zustand aún no hidró desde localStorage, leer sessionStorage directamente
+  const twoFactorToken =
+    storeToken ||
+    (typeof window !== "undefined" ? sessionStorage.getItem("cmf_2fa_token") : null);
   const [code, setCode] = useState<string[]>(Array(6).fill(""));
   const [showSuccess, setShowSuccess] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -28,6 +32,16 @@ export function TwoFactorForm() {
   useEffect(() => {
     if (twoFactorToken) inputRefs.current[0]?.focus();
   }, [twoFactorToken]);
+
+  // Debug: verificar que el token llegó
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("[2FA] store token:", storeToken ?? "(null)");
+      console.log("[2FA] session token:", typeof window !== "undefined" ? sessionStorage.getItem("cmf_2fa_token") ?? "(null)" : "(SSR)");
+      console.log("[2FA] resolved token:", twoFactorToken ? `${twoFactorToken.slice(0, 8)}...` : "(null)");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /* ── Entrada ── */
   useGSAP(() => {

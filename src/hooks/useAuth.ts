@@ -14,6 +14,30 @@ import type {
 } from "@/types/auth";
 import type { ApiResponse } from "@/types/api";
 
+/** Persiste el token 2FA en sessionStorage para sobrevivir la navegación client-side */
+function save2FAToken(token: string) {
+  if (typeof window !== "undefined") {
+    sessionStorage.setItem("cmf_2fa_token", token);
+  }
+}
+
+/** Lee el token 2FA: primero del store (in-memory), luego sessionStorage (fallback) */
+function read2FAToken(): string {
+  const storeToken = useAuthStore.getState().twoFactorToken;
+  if (storeToken) return storeToken;
+  if (typeof window !== "undefined") {
+    return sessionStorage.getItem("cmf_2fa_token") ?? "";
+  }
+  return "";
+}
+
+/** Limpia el token temporal tras verificación exitosa */
+function clear2FAToken() {
+  if (typeof window !== "undefined") {
+    sessionStorage.removeItem("cmf_2fa_token");
+  }
+}
+
 export function useLogin() {
   const router = useRouter();
   const { setAuth, setRequires2FA } = useAuthStore();
@@ -24,6 +48,8 @@ export function useLogin() {
     onSuccess: (response) => {
       const data = response.data;
       if ((data.requires_2fa_setup || data.requires_2fa) && data.token) {
+        // Guardar ANTES del redirect — garantiza disponibilidad aunque Zustand tarde en hidratar
+        save2FAToken(data.token);
         setRequires2FA(data.token);
         router.push("/two-factor");
       } else if (data.user && data.token) {
@@ -36,17 +62,21 @@ export function useLogin() {
 
 export function useVerify2FA() {
   const router = useRouter();
-  const { twoFactorToken, setAuth } = useAuthStore();
+  const { setAuth } = useAuthStore();
 
   return useMutation({
-    mutationFn: (code: string) =>
-      apiClient.post<never, ApiResponse<LoginResponse>>(
+    mutationFn: (code: string) => {
+      // Leer token desde store (in-memory) o sessionStorage (fallback de hidratación)
+      const token = read2FAToken();
+      return apiClient.post<never, ApiResponse<LoginResponse>>(
         "/auth/two-factor/verify",
-        { token: twoFactorToken ?? "", code } satisfies TwoFactorVerifyRequest
-      ),
+        { token, code } satisfies TwoFactorVerifyRequest
+      );
+    },
     onSuccess: (response) => {
       const data = response.data;
       if (data.user && data.token) {
+        clear2FAToken(); // Limpiar el token temporal tras verificación exitosa
         setAuth(data.user, data.token);
         if (!data.is_setup) {
           toast.success("Verificación exitosa");
