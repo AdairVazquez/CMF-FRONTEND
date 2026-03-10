@@ -2,22 +2,10 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { SidebarInset, SidebarProvider, useSidebar } from "@/components/ui/sidebar"
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { Header } from "@/components/dashboard/Header"
 import { useAuthStore } from "@/store/authStore"
-
-// Helper interno: necesita estar dentro de SidebarProvider para usar useSidebar
-function DashboardContent({ children }: { children: React.ReactNode }) {
-  const { toggleSidebar } = useSidebar()
-
-  return (
-    <SidebarInset>
-      <Header onMenuToggle={toggleSidebar} />
-      <div className="flex-1 overflow-y-auto p-6">{children}</div>
-    </SidebarInset>
-  )
-}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -47,7 +35,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       style={{ background: "#0A0D12" } as React.CSSProperties}
     >
       <AppSidebar />
-      <DashboardContent>{children}</DashboardContent>
+      <SidebarInset>
+        <Header />
+        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+      </SidebarInset>
     </SidebarProvider>
   )
 }

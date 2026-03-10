@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronRight, Menu, LogOut, User, Shield } from "lucide-react";
+import { Bell, ChevronRight, LogOut, User, Shield } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/store/authStore";
 import { useLogout } from "@/hooks/useAuth";
 import { getUserRole, getRoleColor, getRoleLabel } from "@/lib/utils";
@@ -36,11 +37,7 @@ const BREADCRUMB_MAP: Record<string, string> = {
   "/dashboard/perfil":        "Mi Perfil",
 };
 
-interface HeaderProps {
-  onMenuToggle: () => void;
-}
-
-export function Header({ onMenuToggle }: HeaderProps) {
+export function Header() {
   const pathname = usePathname();
   const router   = useRouter();
   const { user } = useAuthStore();
@@ -67,14 +64,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
     >
       {/* Left */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={onMenuToggle}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors hover:bg-white/5"
-          style={{ color: "#6B7280" }}
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="w-4 h-4" />
-        </button>
+        <SidebarTrigger className="text-[#6B7280] hover:bg-white/5 hover:text-[#B9C0C8]" />
 
         <nav className="flex items-center gap-1.5 text-sm" aria-label="Breadcrumb">
           {crumbs.map((crumb, i) => (

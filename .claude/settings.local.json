@@ -3,7 +3,20 @@
     "allow": [
       "mcp__filesystem__list_directory",
       "mcp__filesystem__read_text_file",
-      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1)"
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1)",
+      "Read(//c/Users/getza/ZEPHYREA-Proyect/system-core-api/**)",
+      "Bash(php artisan:*)",
+      "Bash(cd \"C:/Users/getza/ZEPHYREA-Proyect/system-core-api\" && php -r \"\nrequire 'vendor/autoload.php';\n\\\\$app = require 'bootstrap/app.php';\n\\\\$app->make\\('Illuminate\\\\Contracts\\\\Console\\\\Kernel'\\)->bootstrap\\(\\);\n\\\\$users = App\\\\Models\\\\User::select\\('email','two_factor_enabled','two_factor_secret','two_factor_confirmed_at'\\)->get\\(\\);\nforeach\\(\\\\$users as \\\\$u\\) {\n  echo \\\\$u->email.' | 2fa:'.\\(\\\\$u->two_factor_enabled?'SI':'NO'\\).' | secret:'.\\(\\\\$u->two_factor_secret?'tiene':'NULL'\\).' | confirmed:'.\\(\\\\$u->two_factor_confirmed_at?'SI':'NO'\\).PHP_EOL;\n}\n\" 2>&1)",
+      "Bash(cd \"C:/Users/getza/ZEPHYREA-Proyect/system-core-api\" && php check_2fa.php 2>&1 && del check_2fa.php)",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1 | tail -15)",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1 | grep -E \"\\(error|Error|warning|Warning|✓|✗\\)\" | head -20)",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1 | grep -E \"\\(error TS|Error:|✓ Compiled|✓ Generating|Failed\\)\" | head -10)",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npx tsc --noEmit 2>&1 | head -60)",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1 | tail -30)",
+      "Bash(del \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\\\\src\\\\components\\\\dashboard\\\\Sidebar.tsx\")",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npx tsc --noEmit 2>&1)",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1 | tail -20)",
+      "Bash(cd \"C:\\\\Users\\\\getza\\\\ZEPHYREA-Proyect\\\\system-admin-dashboard\" && npm run build 2>&1 | tail -12)"
     ]
   },
   "enableAllProjectMcpServers": true,
