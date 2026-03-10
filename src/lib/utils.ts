@@ -34,13 +34,14 @@ export function getRoleLabel(role: string): string {
   return labels[role] ?? role;
 }
 
+// Paleta CMF: Azul Confianza #0E2F4F, Azul Cambio #2F80ED, Plata #B9C0C8
 export function getRoleColor(role: string): string {
   const colors: Record<string, string> = {
-    super_admin: "bg-purple-900/40 text-purple-300 border-purple-800",
-    director:    "bg-blue-900/40 text-blue-300 border-blue-800",
-    rh:          "bg-green-900/40 text-green-300 border-green-800",
-    jefe_area:   "bg-orange-900/40 text-orange-300 border-orange-800",
-    operador:    "bg-gray-900/40 text-gray-300 border-gray-700",
+    super_admin: "bg-[#0E2F4F]/50 text-[#B9C0C8] border-[#0E2F4F]",
+    director:    "bg-[#0E2F4F]/50 text-[#B9C0C8] border-[#0E2F4F]",
+    rh:          "bg-[#0E2F4F]/50 text-[#B9C0C8] border-[#0E2F4F]",
+    jefe_area:   "bg-[#2F80ED]/30 text-[#F4F6F8] border-[#2F80ED]",
+    operador:    "bg-[#1C2333] text-[#B9C0C8] border-[#1C2333]",
   };
-  return colors[role] ?? "bg-gray-900/40 text-gray-300 border-gray-700";
+  return colors[role] ?? "bg-[#1C2333] text-[#B9C0C8] border-[#1C2333]";
 }

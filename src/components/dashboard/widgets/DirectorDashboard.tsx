@@ -74,8 +74,8 @@ export function DirectorDashboard() {
     )
   }
 
-  const onlineDevices = devices?.filter((d) => d.status === "online").length ?? 0
-  const offlineDevices = devices?.filter((d) => d.status === "offline").length ?? 0
+  const onlineDevices = devices?.filter((d) => d.is_online).length ?? 0
+  const offlineDevices = devices?.filter((d) => !d.is_online).length ?? 0
   const pendingLeaves = leaves?.filter((l) => l.status === "pendiente").length ?? 0
 
   return (
@@ -189,7 +189,7 @@ export function DirectorDashboard() {
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{leave.employee.full_name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{leave.type}</p>
+                        <p className="text-xs text-muted-foreground capitalize">{leave.leave_type}</p>
                       </div>
                       <Badge variant="secondary" className="text-xs shrink-0 ml-2">
                         Pendiente

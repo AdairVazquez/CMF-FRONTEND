@@ -70,15 +70,7 @@ export function getUserRole(user: User): string {
   return user.roles[0]?.slug ?? "operador";
 }
 
-/** Helper: ruta de redirect según rol */
-export function getRedirectByRole(user: User): string {
-  const role = getUserRole(user);
-  switch (role) {
-    case "super_admin": return "/dashboard/super";
-    case "director":    return "/dashboard";
-    case "rh":          return "/dashboard/asistencia";
-    case "jefe_area":   return "/dashboard/asistencia";
-    case "operador":    return "/dashboard/dispositivos";
-    default:            return "/dashboard";
-  }
+/** Redirige siempre al dashboard único (solo login/2FA/recuperación activos). */
+export function getRedirectByRole(_user: User): string {
+  return "/dashboard";
 }

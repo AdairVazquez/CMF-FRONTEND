@@ -83,10 +83,10 @@ export function OperadorDashboard() {
     )
   }
 
-  const online = devices?.filter((d) => d.status === "online").length ?? 0
-  const offline = devices?.filter((d) => d.status === "offline").length ?? 0
+  const online = devices?.filter((d) => d.is_online).length ?? 0
+  const offline = devices?.filter((d) => !d.is_online).length ?? 0
   const total = (devices?.length ?? 0)
-  const offlineDevices = devices?.filter((d) => d.status === "offline") ?? []
+  const offlineDevices = devices?.filter((d) => !d.is_online) ?? []
 
   const chartData = [
     { estado: "En línea", cantidad: online },

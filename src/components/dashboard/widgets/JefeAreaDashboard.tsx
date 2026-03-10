@@ -162,7 +162,7 @@ export function JefeAreaDashboard() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{leave.employee.full_name}</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          {leave.type} · {leave.start_date}
+                          {leave.leave_type} · {leave.start_date}
                         </p>
                       </div>
                       <Badge variant="secondary" className="text-xs shrink-0 ml-2">

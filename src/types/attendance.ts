@@ -1,7 +1,7 @@
 import type { Employee } from "./employee"
 
 export type AttendanceType = "entrada" | "salida"
-export type LeaveStatus = "pendiente" | "aprobada" | "rechazada"
+export type LeaveStatus = "pendiente" | "aprobado_jefe" | "aprobado_rh" | "rechazado"
 export type LeaveType = "vacaciones" | "enfermedad" | "personal" | "otro"
 
 export interface AttendanceLog {
@@ -19,10 +19,12 @@ export interface AttendanceSummary {
   absent: number
   late: number
   total: number
+  date?: string
 }
 
 export interface WeeklyAttendance {
   day: string
+  date?: string
   present: number
   absent: number
   late: number
@@ -32,10 +34,12 @@ export interface LeaveRequest {
   id: number
   employee_id: number
   employee: Employee
-  type: LeaveType
+  leave_type: LeaveType
   start_date: string
   end_date: string
+  days_requested?: number
   status: LeaveStatus
-  notes?: string
+  reason?: string | null
+  rejection_reason?: string | null
   created_at: string
 }

@@ -46,15 +46,7 @@ export function useLogin() {
     mutationFn: (data: LoginRequest) =>
       apiClient.post<never, ApiResponse<LoginResponse>>("/auth/login", data),
     onSuccess: (response) => {
-      // ── DEBUG TEMPORAL ────────────────────────────────────────────
-      console.log("LOGIN RESPONSE RAW:", response);
-      console.log("LOGIN response.data:", response?.data);
       const data = response.data;
-      console.log("requires_2fa:", data?.requires_2fa);
-      console.log("requires_2fa_setup:", data?.requires_2fa_setup);
-      console.log("token:", data?.token ? `${String(data.token).slice(0, 12)}...` : "(null/undefined)");
-      console.log("user:", data?.user?.email ?? "(null)");
-      // ── FIN DEBUG ─────────────────────────────────────────────────
       if ((data.requires_2fa_setup || data.requires_2fa) && data.token) {
         // Guardar ANTES del redirect — garantiza disponibilidad aunque Zustand tarde en hidratar
         save2FAToken(data.token);

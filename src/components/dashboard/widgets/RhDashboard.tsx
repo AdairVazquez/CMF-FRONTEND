@@ -77,9 +77,9 @@ export function RhDashboard() {
   }
 
   const pendingLeaves = leaves?.filter((l) => l.status === "pendiente").length ?? 0
-  const totalEmployees = employees?.data?.length ?? 0
+  const totalEmployees = employees?.length ?? 0
   const currentMonth = format(new Date(), "MMMM", { locale: es })
-  const newThisMonth = employees?.data?.filter((e) => {
+  const newThisMonth = employees?.filter((e) => {
     const created = new Date(e.created_at)
     const now = new Date()
     return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear()
@@ -189,7 +189,7 @@ export function RhDashboard() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{leave.employee.full_name}</p>
                         <p className="text-xs text-muted-foreground capitalize">
-                          {leave.type} · {leave.start_date}
+                          {leave.leave_type} · {leave.start_date}
                         </p>
                       </div>
                       <Badge variant="secondary" className="text-xs shrink-0 ml-2">

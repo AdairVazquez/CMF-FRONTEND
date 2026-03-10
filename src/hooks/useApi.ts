@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query"
 import apiClient from "@/lib/axios"
 import { useAuthStore } from "@/store/authStore"
-import type { ApiResponse, PaginatedResponse } from "@/types/api"
+import type { ApiResponse, PaginatedApiResponse } from "@/types/api"
 import type { CompanyFull } from "@/types/company"
 import type { Employee, Branch, Department } from "@/types/employee"
 import type {
@@ -24,7 +24,7 @@ export function useCompanies() {
   return useQuery({
     queryKey: ["companies"],
     queryFn: async () => {
-      const res = await apiClient.get<never, ApiResponse<CompanyFull[]>>("/companies")
+      const res = await apiClient.get<never, PaginatedApiResponse<CompanyFull>>("/companies")
       return res.data
     },
     staleTime: STALE_LONG,
@@ -82,7 +82,7 @@ export function useEmployees() {
   return useQuery({
     queryKey: ["employees", user?.company_id],
     queryFn: async () => {
-      const res = await apiClient.get<never, ApiResponse<PaginatedResponse<Employee>>>("/employees")
+      const res = await apiClient.get<never, PaginatedApiResponse<Employee>>("/employees")
       return res.data
     },
     staleTime: STALE_LONG,
@@ -171,7 +171,7 @@ export function useLeaveRequests() {
   return useQuery({
     queryKey: ["leave-requests", user?.company_id],
     queryFn: async () => {
-      const res = await apiClient.get<never, ApiResponse<LeaveRequest[]>>("/leave-requests")
+      const res = await apiClient.get<never, PaginatedApiResponse<LeaveRequest>>("/leave-requests")
       return res.data
     },
     staleTime: STALE_LONG,

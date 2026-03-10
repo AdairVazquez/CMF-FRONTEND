@@ -15,12 +15,14 @@ const STATUS_LABEL: Record<CompanyStatus, string> = {
   activo: "Activo",
   inactivo: "Inactivo",
   suspendido: "Suspendido",
+  prueba: "Prueba",
 }
 
-const STATUS_VARIANT: Record<CompanyStatus, "default" | "secondary" | "destructive"> = {
+const STATUS_VARIANT: Record<CompanyStatus, "default" | "secondary" | "destructive" | "outline"> = {
   activo: "default",
   inactivo: "secondary",
   suspendido: "destructive",
+  prueba: "outline",
 }
 
 const chartConfig = {

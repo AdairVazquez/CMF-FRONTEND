@@ -3,8 +3,8 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/store/authStore"
-import { AppSidebar } from "@/components/dashboard/AppSidebar"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { DashboardSidebarLayout } from "@/components/dashboard/DashboardSidebarLayout"
+import { SidebarProvider } from "@/components/ui/sidebar"
 
 export default function DashboardLayout({
   children,
@@ -33,9 +33,11 @@ export default function DashboardLayout({
   }
 
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>{children}</SidebarInset>
+    <SidebarProvider
+      className="flex min-h-svh w-full overflow-x-hidden"
+      style={{ flexDirection: "row" }}
+    >
+      <DashboardSidebarLayout>{children}</DashboardSidebarLayout>
     </SidebarProvider>
   )
 }

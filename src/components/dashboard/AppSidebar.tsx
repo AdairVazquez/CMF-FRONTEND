@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import {
   ActivityIcon,
   BarChart2Icon,
@@ -17,7 +16,6 @@ import {
   MonitorIcon,
   PackageIcon,
   ScrollTextIcon,
-  SettingsIcon,
   UsersIcon,
 } from "lucide-react"
 
@@ -197,12 +195,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
       collapsible="icon"
-      style={
-        {
-          "--sidebar-accent": accent,
-          "--sidebar-accent-foreground": "#F4F6F8",
-        } as React.CSSProperties
-      }
+      style={{ "--sidebar-accent": accent, "--sidebar-accent-foreground": "#F4F6F8" } as React.CSSProperties}
       {...props}
     >
       <SidebarHeader>
@@ -216,18 +209,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   borderColor: `${accent}50`,
                 }}
               >
-                <span
-                  className="flex items-center justify-center transition-[transform] duration-200 group-data-[collapsible=icon]:scale-[0.667]"
-                  style={{ color: "inherit" }}
-                >
+                <span className="flex items-center justify-center transition-[transform] duration-200 group-data-[collapsible=icon]:scale-[0.667]">
                   <CmfIcon size={24} color={accent} className="group-data-[collapsible=icon]:hidden" />
                   <CmfIcon size={24} color="#F4F6F8" className="hidden group-data-[collapsible=icon]:!block" />
                 </span>
               </div>
-              <span
-                className="text-base font-bold tracking-tight truncate group-data-[collapsible=icon]:hidden"
-                style={{ color: "#F4F6F8", letterSpacing: "0.02em" }}
-              >
+              <span className="text-base font-bold tracking-tight truncate group-data-[collapsible=icon]:hidden" style={{ color: "#F4F6F8", letterSpacing: "0.02em" }}>
                 ZEPHYREA
               </span>
             </div>
@@ -236,29 +223,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         {navSections.map((section) => (
-          <NavMain
-            key={section.label}
-            items={section.items}
-            sectionLabel={section.label}
-          />
+          <NavMain key={section.label} items={section.items} sectionLabel={section.label} />
         ))}
-        {!isHydrated ? (
-          <NavProjectsSkeleton />
-        ) : (
-          <NavProjects projects={projects} label="Accesos Rápidos" />
-        )}
+        {!isHydrated ? <NavProjectsSkeleton /> : <NavProjects projects={projects} label="Accesos Rápidos" />}
       </SidebarContent>
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Configuración">
-              <Link href="/dashboard/configuracion">
-                <SettingsIcon />
-                <span>Configuración</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
         {user && <NavUser user={user} />}
       </SidebarFooter>
       <SidebarRail />
