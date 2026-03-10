@@ -30,16 +30,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <SidebarProvider style={{ background: "#0A0D12" } as React.CSSProperties}>
-      {/* El wrapper interno es quien fija h-screen y overflow, no SidebarProvider */}
-      <div className="flex h-screen w-full overflow-hidden">
-        <AppSidebar />
-        {/* min-w-0 es crítico: permite que el flex child se contraiga por debajo de su contenido */}
-        <SidebarInset className="min-w-0">
-          <Header />
-          <div className="flex-1 overflow-y-auto p-6">{children}</div>
-        </SidebarInset>
-      </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <Header />
+        <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          {children}
+        </main>
+      </SidebarInset>
     </SidebarProvider>
   )
 }
