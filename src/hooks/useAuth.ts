@@ -23,10 +23,19 @@ export function useLogin() {
       apiClient.post<never, ApiResponse<LoginResponse>>("/auth/login", data),
     onSuccess: (response) => {
       const data = response.data;
-      if (data.requires_2fa && data.token) {
-        setRequires2FA(data.token);
+      const twoFactorToken =
+        data.two_factor_token ?? data.twoFactorToken ?? data.token ?? null;
+      const requires2FA = data.requires_2fa ?? data.requires_2fa_setup ?? false;
+      if (requires2FA) {
+        if (!twoFactorToken) {
+          toast.error("Falta token temporal de 2FA en la respuesta de login.");
+          return;
+        }
+        setRequires2FA(twoFactorToken);
         router.push("/two-factor");
-      } else if (data.user && data.token) {
+        return;
+      }
+      if (data.user && data.token) {
         setAuth(data.user, data.token);
         router.push(getRedirectByRole(data.user));
       }
