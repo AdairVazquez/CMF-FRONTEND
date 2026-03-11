@@ -50,17 +50,19 @@ export function useLogin() {
       console.log("LOGIN RESPONSE RAW:", response);
       console.log("LOGIN response.data:", response?.data);
       const data = response.data;
-      console.log("requires_2fa:", data?.requires_2fa);
-      console.log("requires_2fa_setup:", data?.requires_2fa_setup);
-      console.log("token:", data?.token ? `${String(data.token).slice(0, 12)}...` : "(null/undefined)");
-      console.log("user:", data?.user?.email ?? "(null)");
-      // ── FIN DEBUG ─────────────────────────────────────────────────
-      if ((data.requires_2fa_setup || data.requires_2fa) && data.token) {
-        // Guardar ANTES del redirect — garantiza disponibilidad aunque Zustand tarde en hidratar
-        save2FAToken(data.token);
-        setRequires2FA(data.token);
+      const twoFactorToken =
+        data.two_factor_token ?? data.twoFactorToken ?? data.token ?? null;
+      const requires2FA = data.requires_2fa ?? data.requires_2fa_setup ?? false;
+      if (requires2FA) {
+        if (!twoFactorToken) {
+          toast.error("Falta token temporal de 2FA en la respuesta de login.");
+          return;
+        }
+        setRequires2FA(twoFactorToken);
         router.push("/two-factor");
-      } else if (data.user && data.token) {
+        return;
+      }
+      if (data.user && data.token) {
         setAuth(data.user, data.token);
         router.push(getRedirectByRole(data.user));
       }
