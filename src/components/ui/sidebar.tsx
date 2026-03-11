@@ -29,7 +29,7 @@ const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
+const SIDEBAR_WIDTH_ICON = "4rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 type SidebarContextProps = {
@@ -225,6 +225,7 @@ const Sidebar = React.forwardRef<
     const isCollapsed = state === "collapsed" && collapsible === "icon"
     const isOffcanvas = state === "collapsed" && collapsible === "offcanvas"
     const layoutWidth = isOffcanvas ? "0" : isCollapsed ? SIDEBAR_WIDTH_ICON : SIDEBAR_WIDTH
+    const { style: propsStyle, ...restProps } = props
 
     return (
       <div
@@ -250,10 +251,10 @@ const Sidebar = React.forwardRef<
             className
           )}
           style={{
-            ...(typeof props.style === "object" && props.style !== null ? props.style : {}),
+            ...(typeof propsStyle === "object" && propsStyle !== null ? propsStyle : {}),
             width: isOffcanvas ? undefined : isCollapsed ? SIDEBAR_WIDTH_ICON : SIDEBAR_WIDTH,
           }}
-          {...{ ...props, style: undefined }}
+          {...restProps}
         >
           <div
             data-sidebar="sidebar"

@@ -12,7 +12,7 @@ export function DashboardSidebarLayout({
     <>
       <AppSidebar />
       <SidebarInset className="min-h-0 overflow-auto border-l border-sidebar-border">
-        <div className="flex min-h-0 flex-1 flex-col px-4 py-4 md:px-6">
+        <div className="flex min-h-0 flex-1 flex-col px-4 pb-4 pt-0 md:px-6 md:pb-6">
           {children}
         </div>
       </SidebarInset>
