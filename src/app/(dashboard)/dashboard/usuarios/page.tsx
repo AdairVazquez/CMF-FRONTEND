@@ -154,7 +154,7 @@ export default function UsuariosPage() {
             <Plus className="w-4 h-4" />
             Nuevo usuario
           </Button>
-        }
+        } 
       />
 
       {/* Filters */}
