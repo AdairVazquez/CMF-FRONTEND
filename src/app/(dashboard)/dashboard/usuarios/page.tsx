@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { UserCog, Plus, Search, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ModalNuevoUsuario } from "./ModalNuevoUsuario";
 import { toast } from "sonner";
 import apiClient from "@/lib/axios";
 import type { ApiResponse } from "@/types/api";
@@ -27,9 +28,12 @@ interface UsersResponse {
 
 export default function UsuariosPage() {
   const qc = useQueryClient();
-  const [search, setSearch]     = useState("");
+  const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [page]                  = useState(1);
+  const [page] = useState(1);
+  const [selectedUserId, setSelectedUserId] = useState<number | undefined>(undefined);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modo, setModo] = useState("");
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["users", page, search],
@@ -54,10 +58,10 @@ export default function UsuariosPage() {
 
   const filtered = search
     ? users.filter(
-        (u) =>
-          u.name.toLowerCase().includes(search.toLowerCase()) ||
-          u.email.toLowerCase().includes(search.toLowerCase())
-      )
+      (u) =>
+        u.name.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+    )
     : users;
 
   const columns: Column<User>[] = [
@@ -92,7 +96,7 @@ export default function UsuariosPage() {
           style={
             row.is_active
               ? { background: "rgba(34,197,94,0.1)", color: "#22c55e", borderColor: "rgba(34,197,94,0.2)" }
-              : { background: "rgba(239,68,68,0.1)",  color: "#ef4444", borderColor: "rgba(239,68,68,0.2)" }
+              : { background: "rgba(239,68,68,0.1)", color: "#ef4444", borderColor: "rgba(239,68,68,0.2)" }
           }
         >
           {row.is_active ? "Activo" : "Inactivo"}
@@ -116,7 +120,11 @@ export default function UsuariosPage() {
           <button
             className="w-7 h-7 rounded-md flex items-center justify-center transition-colors hover:bg-white/5"
             style={{ color: "#6B7280" }}
-            onClick={() => toast.info("Edición próximamente disponible")}
+            onClick={async() => {
+              setIsModalOpen(true);
+              setModo("editar");
+              setSelectedUserId(row.id);
+            }}
             aria-label="Editar usuario"
           >
             <Pencil className="w-3.5 h-3.5" />
@@ -149,12 +157,16 @@ export default function UsuariosPage() {
             size="sm"
             className="gap-2"
             style={{ background: "#2F80ED", color: "#fff" }}
-            onClick={() => toast.info("Creación de usuarios próximamente")}
+
+            onClick={() => {
+              setIsModalOpen(true);
+              setModo("crear");
+            }}
           >
             <Plus className="w-4 h-4" />
             Nuevo usuario
           </Button>
-        } 
+        }
       />
 
       {/* Filters */}
@@ -219,6 +231,13 @@ export default function UsuariosPage() {
           </div>
         </DialogContent>
       </Dialog>
+      <ModalNuevoUsuario
+        isOpen={isModalOpen}
+        mode={modo}
+        onClose={() => setIsModalOpen(false)}
+        onRefresh={refetch}
+        user={selectedUserId}
+      />
     </div>
   );
 }
