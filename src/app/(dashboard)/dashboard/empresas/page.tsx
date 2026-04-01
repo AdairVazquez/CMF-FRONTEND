@@ -16,7 +16,14 @@ interface Empresa {
   tax_id: string;
   plan: string;
   status: string;
+  disabled_at: string;
 }
+
+const formatFecha = (fecha?: string | null) => {
+  if (!fecha || fecha.trim() === "") return "Sin fecha";
+  const soloFecha = fecha.split("T")[0] || fecha;
+  return soloFecha;
+};
 
 export default function EmpresasPage() {
   const [selectedEmpresaId, setSelectedEmpresaId] = useState<number | undefined>(undefined);
@@ -34,6 +41,13 @@ export default function EmpresasPage() {
           {row.status}
         </span>
 
+      )
+    },
+    {
+      header: "Fecha de desactivación",
+      key: "disabled_at",
+      render: (row) => (
+        <span>{formatFecha(row.disabled_at)}</span>
       )
     },
     {
