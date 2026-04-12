@@ -23,7 +23,8 @@ export default function RolesPage() {
     queryFn: () => apiClient.get<never, ApiResponse<Role[]>>("/roles"),
   });
 
-  const roles: Role[] = data?.data ?? [];
+
+  const roles: Role[] = data?.data?.data ?? [];
 
   const columns: Column<Role>[] = [
     {
