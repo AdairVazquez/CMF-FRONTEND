@@ -52,61 +52,72 @@ const TagsInput = ({ tags, setTags }: { tags: string[], setTags: (tags: string[]
 };
 
 // --- COMPONENTE PRINCIPAL ---
-export function ModalNuevaEmpresa({ isOpen, onClose, onRefresh, mode, empresaId }: any) {
+export function ModalNuevoEmpleado({ isOpen, onClose, onRefresh, mode, employeeId }: any) {
   const { token } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [formData, setFormData] = useState({
-    name: "",
-    legal_name: "",
-    tax_id: "",
+    company_id: "",
+    branch_id: "",
+    department_id: "",
+    shift_id: "",
+    employee_code: "",
+    first_name: "",
+    last_name: "",
     email: "",
-    phone: "",
-    address: "",
-    plan: "prueba",
-    status: "activo",
-    timezone: "America/Mexico_City",
-    modules: [] as string[],
+    employee_type: "",
+    hire_date: "",
+    position: "",
+    hierachy_level: "",
   });
-  const [logo, setLogo] = useState<File | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
-    if (mode === "editar" && empresaId) {
-      const fetchEmpresa = async () => {
+    if (mode === "editar" && employeeId) {
+      const fetchEmployee = async () => {
         try {
-          const response = await fetch(`http://localhost:8000/api/v1/companies/${empresaId}`, {
+          const response = await fetch(`http://localhost:8000/api/v1/employee/${employeeId}`, {
             headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
           });
           const result = await response.json();
           const u = result.data;
           setFormData({
-            name: u.name || "",
-            legal_name: u.legal_name || "",
-            tax_id: u.tax_id || "",
+            company_id: u.company_id || "",
+            branch_id: u.branch_id || "",
+            department_id: u.department_id || "",
+            shift_id: u.shift_id || "",
+            employee_code: u.employee_code || "",
+            first_name: u.first_name || "",
+            last_name: u.last_name || "",
             email: u.email || "",
-            phone: u.phone || "",
-            address: u.address || "",
-            plan: u.plan || "prueba",
-            status: u.status || "activo",
-            timezone: u.timezone || "America/Mexico_City",
-            modules: u.modules || [], // <-- Aquí se cargan tus datos de la BD
+            employee_type: u.employee_type || "",
+            hire_date: u.hire_date || "",
+            position: u.position || "",
+            hierachy_level: u.hierachy_level || "",
           });
-        } catch (error) { console.error("Error cargando empresa", error); }
+        } catch (error) { console.error("Error cargando empleados", error); }
       };
-      if (token) fetchEmpresa();
+      if (token) fetchEmployee();
     } else {
       handleResetFields();
     }
-  }, [token, mode, isOpen, empresaId]);
+  }, [token, mode, isOpen, employeeId]);
 
   const handleResetFields = () => {
     setFormData({
-      name: "", legal_name: "", tax_id: "", email: "", phone: "",
-      address: "", plan: "prueba", status: "activo", 
-      timezone: "America/Mexico_City", modules: [],
+      company_id: "", 
+      branch_id: "", 
+      department_id: "", 
+      shift_id: "", 
+      employee_code: "",
+      first_name: "", 
+      last_name: "", 
+      email: "", 
+      employee_type: "",
+      hire_date: "",
+      position: "", 
+      hierachy_level: ""
     });
-    setLogo(null);
     setErrors({});
   };
 
@@ -121,10 +132,9 @@ export function ModalNuevaEmpresa({ isOpen, onClose, onRefresh, mode, empresaId 
         data.append(key, value);
       }
     });
-    if (logo) data.append("logo", logo);
 
     try {
-      const url = mode === "editar" ? `http://localhost:8000/api/v1/companies/${empresaId}` : "http://localhost:8000/api/v1/companies";
+      const url = mode === "editar" ? `http://localhost:8000/api/v1/employee/${employeeId}` : "http://localhost:8000/api/v1/employee";
       if (mode === "editar") data.append("_method", "PUT");
 
       const response = await fetch(url, {

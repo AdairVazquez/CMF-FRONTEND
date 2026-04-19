@@ -1,5 +1,9 @@
 import { CreditCard } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Building2, Plus, Pencil, } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+
 
 export default function TarjetasPage() {
   return (
@@ -11,6 +15,20 @@ export default function TarjetasPage() {
           <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(217,119,6,0.1)", border: "1px solid rgba(217,119,6,0.2)" }}>
             <CreditCard className="w-5 h-5" style={{ color: "#D97706" }} />
           </div>
+        }
+        actions={
+          <Button
+            size="sm"
+            className="gap-2"
+            // onClick={() => {
+            //   setIsModalOpen(true);
+            //   setModo("crear");
+            // }}
+            style={{ background: "#2F80ED", color: "#fff" }}
+          >
+            <Plus className="w-4 h-4" />
+            Registrar nueva tarjeta
+          </Button>
         }
       />
       <div
